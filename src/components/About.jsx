@@ -1,128 +1,85 @@
 import React, { useState } from 'react';
-import { Award, BookOpen, HeartPulse, GraduationCap, Building2 } from 'lucide-react';
+import { Award, BookOpen, HeartPulse, GraduationCap, Building2, UserCheck, ShieldCheck } from 'lucide-react';
+import drDewanshImg from '../assets/dr-dewansh-mishra.jpg';
 
 export default function About() {
   const [activeTab, setActiveTab] = useState('credentials');
 
   const tabs = [
     { id: 'credentials', label: 'Credentials', icon: <GraduationCap size={18} /> },
-    { id: 'experience', label: 'Experience', icon: <Award size={18} /> },
-    { id: 'philosophy', label: 'Philosophy', icon: <HeartPulse size={18} /> }
+    { id: 'experience', label: 'Specialization', icon: <Award size={18} /> },
+    { id: 'philosophy', label: 'Research & Affiliations', icon: <BookOpen size={18} /> }
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'credentials':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Medical Qualifications</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'rgba(var(--primary-rgb), 0.02)' }}>
-                <p style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent-teal)' }}>DM - Neuroimaging & Intervention Neuroradiology</p>
-                <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Sree Chitra Tirunal Institute for Medical Sciences and Technology, Thiruvananthapuram, Kerala, India.
-                </p>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  A national premier institute for advanced medical research and neurological specializations.
-                </p>
-              </div>
-
-              <div style={{ padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'rgba(var(--primary-rgb), 0.02)' }}>
-                <p style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>MD - Radiodiagnosis</p>
-                <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Advanced postgraduate degree specializing in diagnostic imaging, MRI, CT scanning, and angiographic imaging.
-                </p>
-              </div>
-
-              <div style={{ padding: '16px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'rgba(var(--primary-rgb), 0.02)' }}>
-                <p style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>MBBS (Bachelor of Medicine, Bachelor of Surgery)</p>
-                <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                  Core medical training and clinical rotations establishing a solid foundation in human physiology and surgical practices.
-                </p>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
+              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--accent-teal)', margin: 0 }}>DM - Neuroradiology</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
+                Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum
+              </p>
+            </div>
+            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
+              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', margin: 0 }}>MD - Radiodiagnosis</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
+                Advanced postgraduate degree specializing in neuro-imaging & diagnostic radiology
+              </p>
+            </div>
+            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
+              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', margin: 0 }}>MBBS</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
+                Core medical degree establishing foundational clinical and surgical competence
+              </p>
             </div>
           </div>
         );
       case 'experience':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Clinical Journey & Affiliations</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                  color: 'var(--accent-teal)',
-                  flexShrink: 0
-                }}>
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>Consultant Interventional Neuroradiologist</p>
-                  <p style={{ fontSize: '0.925rem', color: 'var(--accent-teal)', fontWeight: 500, margin: '2px 0 6px' }}>Apollomedics Super Speciality Hospitals, Lucknow</p>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    Active consultant handling high-risk clinical procedures including acute mechanical thrombectomies for strokes, aneurysm coiling, embolization of cerebral AVMs, and stenting.
-                  </p>
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <Building2 size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>Consultant Interventional Neuroradiologist</p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--accent-teal)', fontWeight: 600, margin: '2px 0 4px' }}>Apollomedics Super Speciality Hospital, Lucknow</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                  Specializing in acute mechanical thrombectomy, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular interventions.
+                </p>
               </div>
-
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(var(--primary-rgb), 0.05)',
-                  color: 'var(--text-primary)',
-                  flexShrink: 0
-                }}>
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>Senior Resident & Specialist Fellow</p>
-                  <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', fontWeight: 500, margin: '2px 0 6px' }}>Sree Chitra Tirunal Institute (SCTIMST)</p>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    Conducted over 500+ complex cerebral diagnostic angiograms and assisted in extensive endovascular therapeutics under leading national mentors.
-                  </p>
-                </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <ShieldCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>6+ Years Specialized Expertise</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: '1.5' }}>
+                  Extensive clinical experience in endovascular stroke care, diagnostic 3D cerebral angiograms, and non-surgical neurovascular treatments.
+                </p>
               </div>
             </div>
           </div>
         );
       case 'philosophy':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Clinical Philosophy</h3>
-            
-            <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: '1.7' }}>
-              "Neurological and cerebrovascular emergencies demand absolute precision, rapid decision-making, and deep empathy. By employing state-of-the-art endovascular microcatheters, we can navigate inside the blood vessels of the brain to resolve strokes, coiled aneurysms, and bleeding AVMs without open brain surgery. 
-            </p>
-            <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: '1.7', marginTop: '10px' }}>
-              My mission is to deliver these sophisticated, minimally invasive treatments to patients in Lucknow and Uttar Pradesh, maximizing recovery potential and returning patients to their families with minimal disruption."
-            </p>
-            
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '16px',
-              backgroundColor: 'rgba(6, 182, 212, 0.05)',
-              borderRadius: 'var(--radius-sm)',
-              borderLeft: '4px solid var(--accent-teal)',
-              marginTop: '12px'
-            }}>
-              <p style={{ fontStyle: 'italic', fontWeight: 500, fontSize: '0.925rem', color: 'var(--text-primary)', margin: 0 }}>
-                "Precision guided by technology. Healing delivered with compassion." — Dr. Dewansh Mishra
-              </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <UserCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>ISVIR-UP Executive Member</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 6px' }}>
+                  Executive member of Indian Society of Vascular and Interventional Radiology (UP Chapter).
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <BookOpen size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>Research & Thesis</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: '1.5' }}>
+                  Pioneered thesis on brain dAVF neurocognitive implications, MRA role in CCF, and identified the central non-enhancement sign in carotid body tumors.
+                </p>
+              </div>
             </div>
           </div>
         );
@@ -132,112 +89,181 @@ export default function About() {
   };
 
   return (
-    <section id="about" className="py-24 relative" style={{ transition: 'background-color var(--transition-normal)' }}>
-      <div className="container">
+    <section
+      id="about"
+      className="py-20 relative overflow-hidden"
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        transition: 'background-color var(--transition-normal)',
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Background Blobs */}
+      <div className="glow-blob glow-blob-teal" style={{ top: '15%', right: '5%', opacity: 0.1 }} />
+      <div className="glow-blob glow-blob-blue" style={{ bottom: '10%', left: '5%', opacity: 0.1 }} />
+
+      <div className="container relative z-10">
         
-        {/* Section Headers */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <span className="section-tag">About The Specialist</span>
-          <h2 className="section-title">Dr. Dewansh Mishra</h2>
-          <p className="section-desc">
-            A pioneering Neuro-Interventional Radiologist dedicated to providing advanced brain and spinal vascular solutions in Lucknow.
+        {/* Section Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '40px' }}>
+          <span className="section-tag" style={{ marginBottom: '8px' }}>About The Specialist</span>
+          <h2 className="section-title" style={{ fontSize: '2.4rem', marginBottom: '12px' }}>
+            About Dr. Dewansh Mishra
+          </h2>
+          <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '780px', margin: 0 }}>
+            Neurointervention Specialist • Apollomedics Super Speciality Hospital, Lucknow
           </p>
         </div>
 
-        <div className="grid grid-cols-2" style={{ gap: '64px', alignItems: 'start', marginTop: '32px' }}>
+        {/* 2-Column Grid: Biography & Big Full-Height Doctor Image */}
+        <div className="about-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: '1.15fr 0.85fr',
+          gap: '40px',
+          alignItems: 'stretch'
+        }}>
           
-          {/* Left Side: Summary and Doctor Portrait Illustration */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.8rem', fontWeight: 700, lineHeight: '1.3' }}>
-              Consultant Consultant at Apollomedics Super Speciality Hospitals
-            </h3>
+          {/* Left Column: Detailed Biography Text */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left', justifyContent: 'center' }}>
             
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.7' }}>
-              Dr. Dewansh Mishra is a highly trained Interventional Neuroradiologist with a DM degree from the prestigious Sree Chitra Tirunal Institute. With a comprehensive background in Radiodiagnosis (MBBS, MD) and over 6 years of expertise, he specializes in cutting-edge endovascular techniques.
-            </p>
-            
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.7' }}>
-              Unlike traditional neurosurgery which requires opening the skull, Dr. Mishra accesses the brain's complex blood vessels through tiny incisions in the groin or wrist. This minimally invasive approach drastically reduces risks and speeds up recovery.
+            <p style={{
+              fontSize: '1.05rem',
+              color: 'var(--text-primary)',
+              lineHeight: '1.75',
+              margin: 0
+            }}>
+              <strong>Dr. Dewansh Mishra</strong> is a highly skilled Interventional Neuroradiologist with an <strong>MBBS</strong> and <strong>MD in Radiodiagnosis</strong>, and a <strong>DM in Neuroradiology</strong> from the prestigious <strong>Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum</strong>. With over 6 years of experience in radiology, including specialized training in diagnostic and interventional neuroradiology, he has expertise in the management of stroke, brain aneurysms, vascular malformations (AVMs, dAVFs), spinal vascular disorders, and craniofacial vascular malformations. Dr. Mishra is proficient in advanced endovascular procedures such as mechanical thrombectomy, aneurysm coiling, flow diversion, and embolization therapies including AVM embolization and MMA embolization.
             </p>
 
-            {/* Quick highlights checklist */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-teal)' }} />
-                <span>Endovascular Coiling</span>
+            <p style={{
+              fontSize: '1.025rem',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.75',
+              margin: 0
+            }}>
+              His postdoctoral thesis focused on brain dural arteriovenous fistulas and cognitive function analysis, highlighting the neurocognitive implications of these vascular lesions. Dr. Mishra has also contributed significantly to neuroradiological research, including a study on the role of MRA in carotid-cavernous fistulas (CCF), and has identified the central non-enhancement sign in imaging of carotid body tumors, aiding in improved diagnostic accuracy.
+            </p>
+
+            <p style={{
+              fontSize: '1.025rem',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.75',
+              margin: 0
+            }}>
+              An executive member of <strong>ISVIR-UP (Indian Society of Vascular and Interventional Radiology – Uttar Pradesh chapter)</strong>, Dr. Mishra actively participates in academic initiatives and training programs. He is dedicated to delivering compassionate, evidence-based, and minimally invasive care aimed at improving neurological health and patient outcomes.
+            </p>
+
+            {/* Interactive Tabs Box for Credentials & Highlights */}
+            <div className="glass-panel" style={{
+              marginTop: '10px',
+              padding: '20px 24px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow-md)'
+            }}>
+              <div style={{
+                display: 'flex',
+                borderBottom: '1px solid var(--border-color)',
+                marginBottom: '16px',
+                gap: '6px'
+              }}>
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        fontSize: '0.875rem',
+                        fontWeight: isActive ? 700 : 500,
+                        border: 'none',
+                        background: 'none',
+                        color: isActive ? 'var(--accent-teal)' : 'var(--text-muted)',
+                        borderBottom: isActive ? '2px solid var(--accent-teal)' : '2px solid transparent',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-fast)',
+                        marginBottom: '-1px'
+                      }}
+                    >
+                      {tab.icon}
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-teal)' }} />
-                <span>Stroke Mechanical Thrombectomy</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-teal)' }} />
-                <span>Spinal AVM Embolization</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 500 }}>
-                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-teal)' }} />
-                <span>Carotid Artery Stenting</span>
+
+              <div>
+                {renderTabContent()}
               </div>
             </div>
+
           </div>
 
-          {/* Right Side: Interactive Tabs and Credentials Detail */}
-          <div className="glass-panel" style={{
-            padding: '32px',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-xl)'
+          {/* Right Column: Big Full Image of Dr. Dewansh Mishra */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            minHeight: '620px'
           }}>
-            {/* Tab buttons grid */}
-            <div style={{
+            <div className="glass-panel" style={{
+              width: '100%',
+              height: '100%',
+              minHeight: '620px',
+              maxHeight: '750px',
+              borderRadius: 'var(--radius-lg)',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-xl)',
+              border: '1px solid var(--border-color)',
+              backgroundColor: 'var(--bg-secondary)',
               display: 'flex',
-              borderBottom: '1px solid var(--border-color)',
-              marginBottom: '28px',
-              gap: '8px'
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0
             }}>
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '12px 16px',
-                      fontSize: '0.95rem',
-                      fontWeight: isActive ? 600 : 500,
-                      border: 'none',
-                      background: 'none',
-                      color: isActive ? 'var(--accent-teal)' : 'var(--text-secondary)',
-                      borderBottom: isActive ? '2px solid var(--accent-teal)' : '2px solid transparent',
-                      cursor: 'pointer',
-                      transition: 'all var(--transition-fast)',
-                      marginBottom: '-1px'
-                    }}
-                  >
-                    {tab.icon}
-                    {tab.label}
-                  </button>
-                );
-              })}
+              <img
+                src={drDewanshImg}
+                alt="Dr. Dewansh Mishra - Neurointervention Specialist"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  objectPosition: 'center top',
+                  display: 'block'
+                }}
+              />
             </div>
-
-            {/* Tab content display */}
-            <div style={{ minHeight: '340px' }}>
-              {renderTabContent()}
-            </div>
-
           </div>
 
         </div>
+
       </div>
 
+      {/* Responsive Styles */}
       <style>{`
-        @media (max-width: 768px) {
-          #about .grid-cols-2 {
+        @media (max-width: 992px) {
+          .about-grid {
             grid-template-columns: 1fr !important;
-            gap: 48px !important;
+            gap: 32px !important;
+          }
+          .about-grid > div:last-child {
+            min-height: 480px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          #about .section-title {
+            font-size: 1.7rem !important;
+          }
+          .about-grid > div:last-child {
+            min-height: 380px !important;
           }
         }
       `}</style>

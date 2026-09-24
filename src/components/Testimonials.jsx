@@ -44,9 +44,12 @@ export default function Testimonials() {
   };
 
   return (
-    <section id="reviews" className="py-24 relative" style={{
+    <section id="reviews" className="py-24 relative overflow-hidden" style={{
       backgroundColor: 'var(--bg-secondary)',
-      transition: 'background-color var(--transition-normal)'
+      transition: 'background-color var(--transition-normal)',
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden'
     }}>
       <div className="glow-blob glow-blob-teal" style={{ top: '10%', right: '5%' }} />
       

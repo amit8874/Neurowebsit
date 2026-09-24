@@ -1,76 +1,69 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Zap, Activity, HelpCircle, Heart, ArrowRight } from 'lucide-react';
+import { ShieldAlert, Zap, Activity, Scan, FileSearch, ArrowRight } from 'lucide-react';
 
 export default function Treatments() {
   const [selectedCard, setSelectedCard] = useState(null);
 
   const treatments = [
     {
-      id: 'stroke',
-      title: 'Brain Stroke',
-      shortDesc: 'Immediate removal of blood clots to restore cerebral blood flow and salvage brain tissue.',
-      symptoms: ['Sudden weakness or numbness in face/arm/leg', 'Difficulty speaking or understanding speech', 'Sudden loss of balance or severe dizziness'],
-      procedure: 'Mechanical Thrombectomy',
-      details: 'Using advanced microcatheters inserted through the leg or wrist, a stent retriever or aspiration device is guided directly to the blocked brain artery. The blood clot is caught and sucked out, immediately restoring blood flow. This is a time-critical procedure (usually done within 6 to 24 hours of stroke onset).',
-      color: '#e11d48', // Red alert
+      id: 'aneurysm',
+      title: 'Aneurysm Coiling / SAC / FD',
+      shortDesc: 'Advanced micro-coiling, Stent-Assisted Coiling (SAC), and Flow Diverter (FD) stenting to prevent & treat brain aneurysm ruptures.',
+      symptoms: ['Sudden, extremely severe headache ("thunderclap")', 'Double vision or dilated pupil', 'Pain behind or above one eye', 'Cranial nerve palsies'],
+      procedure: 'Endovascular Micro-Coiling & Flow Diversion',
+      details: 'Navigating specialized microcatheters into the cerebral aneurysm sac, ultra-soft platinum coils are deployed to seal the aneurysm. For wide-necked aneurysms, Stent-Assisted Coiling (SAC) or Flow Diverter (FD) stents are deployed to redirect arterial blood flow away from the bulge, promoting thrombosis without open brain surgery.',
+      color: '#06b6d4',
+      icon: <Activity size={24} />
+    },
+    {
+      id: 'thrombectomy',
+      title: 'Mechanical Thrombectomy in Brain Stroke',
+      shortDesc: 'Emergency endovascular procedure to physically extract blood clots from occluded brain arteries and prevent stroke disability.',
+      symptoms: ['Sudden weakness or numbness in face, arm, or leg', 'Sudden difficulty speaking or slurred speech', 'Loss of balance, severe dizziness, or confusion'],
+      procedure: 'Acute Mechanical Thrombectomy',
+      details: 'Using microcatheters inserted via femoral or radial access, a stent retriever or aspiration catheter is guided directly to the blocked cerebral artery under real-time fluoroscopy. The blood clot is captured and removed, instantly restoring vital blood flow to ischemic brain tissue.',
+      color: '#e11d48',
       icon: <Zap size={24} />
     },
     {
-      id: 'aneurysm',
-      title: 'Brain Aneurysm',
-      shortDesc: 'Securing weakened, bulging artery walls in the brain using platinum micro-coils to prevent rupture.',
-      symptoms: ['Sudden, extremely severe headache ("thunderclap")', 'Double vision or dilated pupils', 'Pain above or behind an eye'],
-      procedure: 'Endovascular Coiling & Flow Diversion',
-      details: 'A microcatheter is navigated inside the aneurysm sac. Tiny, soft platinum coils are released, packing the aneurysm. This blocks blood flow from entering the bulge, prompting it to clot off and preventing rupture. Flow-diverting stents may also be placed in the parent artery to redirect blood away from the aneurysm.',
-      color: '#06b6d4', // Cyan
-      icon: <Activity size={24} />
+      id: 'dsa',
+      title: 'DSA / Angiography',
+      shortDesc: 'Gold-standard Diagnostic Digital Subtraction Angiography for micro-precise visualization of cerebral and spinal blood vessels.',
+      symptoms: ['Suspected arterial blockages or stenosis', 'Vascular malformation evaluation', 'Pre-surgical vascular mapping', 'Unexplained intracranial hemorrhage'],
+      procedure: 'Cerebral & Spinal Digital Subtraction Angiography',
+      details: 'DSA is the definitive gold standard for vascular diagnosis. A flexible catheter introduces radiopaque contrast dye into targeted head and neck arteries. High-definition 3D rotational imaging captures vessel architecture with sub-millimeter precision, pinpointing aneurysms, stenoses, and fistulas.',
+      color: '#10b981',
+      icon: <Scan size={24} />
     },
     {
       id: 'avm',
-      title: 'Brain & Spinal AVM',
-      shortDesc: 'Sealing abnormal tangles of blood vessels (Arteriovenous Malformations) using liquid embolic agents.',
-      symptoms: ['Seizures or progressive neurological deficits', 'Chronic headaches or localized back pain', 'Numbness or weakness in limbs'],
-      procedure: 'Endovascular Embolization',
-      details: 'Arteriovenous Malformations (AVMs) are abnormal connections between arteries and veins. In embolization, a microcatheter is carefully threaded into the feeding arteries of the AVM. A special liquid embolic glue (like Onyx) is injected to block off the abnormal tangle, preventing hemorrhage or preparing the area for surgery.',
-      color: '#3b82f6', // Blue
+      title: 'AVM / DAVF Embolization',
+      shortDesc: 'Targeted endovascular occlusion of Arteriovenous Malformations (AVM) and Dural Arteriovenous Fistulas (DAVF) using liquid embolic agents.',
+      symptoms: ['Seizures or focal neurological deficits', 'Pulsatile tinnitus (whooshing noise in ears)', 'Chronic localized head or spinal pain', 'Sudden intracranial bleeding'],
+      procedure: 'Transcatheter Liquid Embolization (Onyx / Glue)',
+      details: 'AVMs and DAVFs are high-flow vascular short-circuits. Ultra-thin microcatheters are super-selectively navigated into feeding vessels to inject non-adhesive liquid embolic agents (such as Onyx, Squid, or Glue), effectively plugging the malformation nidus or fistulous connection.',
+      color: '#3b82f6',
       icon: <ShieldAlert size={24} />
     },
     {
-      id: 'carotid',
-      title: 'Carotid Artery Stenting',
-      shortDesc: 'Restoring blood flow in narrowed neck arteries using high-grade metal stents to prevent stroke.',
-      symptoms: ['Transient Ischemic Attacks (TIAs) / Mini-strokes', 'Temporary blindness in one eye', 'Sudden slurred speech'],
-      procedure: 'Angioplasty & Stenting with Embolic Protection',
-      details: 'For patients with severe carotid artery stenosis (narrowing), a self-expanding metal stent is deployed at the blockage area in the neck. An embolic protection filter (brain filter) is placed downstream to catch any loose plaque particles during the procedure, keeping them from traveling to the brain and causing a stroke.',
-      color: '#10b981', // Emerald
-      icon: <Heart size={24} />
-    },
-    {
-      id: 'hemorrhage',
-      title: 'Brain Hemorrhage',
-      shortDesc: 'Emergency diagnosis and endovascular management of bleeding inside the brain or skull.',
-      symptoms: ['Sudden loss of consciousness', 'Nausea, vomiting, and severe neck stiffness', 'Sudden weakness on one side'],
-      procedure: 'Hemorrhage Management & Embolization',
-      details: 'Intracranial hemorrhage can be caused by high blood pressure, ruptured aneurysms, or trauma. Dr. Mishra performs urgent diagnostic angiography to locate active bleed sources and uses microvascular embolization techniques to stop critical bleeding, stabilizing the patient.',
-      color: '#f59e0b', // Amber
-      icon: <Activity size={24} />
-    },
-    {
-      id: 'mri',
-      title: 'Brain & Spine MRI Interpretation',
-      shortDesc: 'Expert, high-resolution diagnostic imaging analysis to detect silent brain anomalies.',
-      symptoms: ['Chronic unexplained headaches', 'Persistent tingling or shooting nerve pains', 'Progressive memory loss or confusion'],
-      procedure: 'Advanced Neuroimaging Diagnostics',
-      details: 'Utilizing state-of-the-art MRI protocols (Diffusion-weighted imaging, perfusion MRI, MR Angiography/Venography, and functional scans), Dr. Mishra interprets complex brain scans to accurately identify tumors, strokes, MS lesions, and nerve compressions, guiding precise treatment planning.',
-      color: '#8b5cf6', // Violet
-      icon: <HelpCircle size={24} />
+      id: 'neuroreview',
+      title: 'Diagnostic Neuroimaging Consultation (Neuroreview)',
+      shortDesc: 'Subspecialty expert second opinion and comprehensive review of Brain/Spine MRI, CT, and vessel imaging scans.',
+      symptoms: ['Complex or inconclusive MRI/CT findings', 'Persistent unexplained neurological symptoms', 'Pre-treatment surgical evaluation', 'Second opinion request'],
+      procedure: 'Subspecialty Neuroimaging & Multi-Modality Scans Review',
+      details: 'Expert neuroradiological consultation analyzing high-resolution MRI sequences (DWI, PWI, MRA/MRV), CT angiograms, and diagnostic scans. Delivers precise diagnostic clarity, detailed report interpretations, and personalized treatment recommendations.',
+      color: '#8b5cf6',
+      icon: <FileSearch size={24} />
     }
   ];
 
   return (
-    <section id="treatments" className="py-24 relative" style={{
+    <section id="treatments" className="py-24 relative overflow-hidden" style={{
       backgroundColor: 'var(--bg-secondary)',
-      transition: 'background-color var(--transition-normal)'
+      transition: 'background-color var(--transition-normal)',
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden'
     }}>
       {/* Background decoration */}
       <div className="glow-blob glow-blob-teal" style={{ top: '30%', right: '10%' }} />
@@ -82,7 +75,7 @@ export default function Treatments() {
           <span className="section-tag">Clinical Specializations</span>
           <h2 className="section-title">Endovascular Neuro-Interventions</h2>
           <p className="section-desc">
-            Explore major conditions treated using advanced, minimally invasive endovascular catheter technology, eliminating the need for open skull surgeries.
+            State-of-the-art endovascular catheter procedures and expert neuroimaging diagnostics delivered by Dr Dewansh Mishra.
           </p>
         </div>
 
@@ -130,7 +123,7 @@ export default function Treatments() {
                 {treatment.icon}
               </div>
 
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '12px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '12px', lineHeight: '1.3' }}>
                 {treatment.title}
               </h3>
               
@@ -151,12 +144,12 @@ export default function Treatments() {
           ))}
         </div>
 
-        {/* Detailed Modal/Drawer for Selected Treatment */}
+        {/* Detailed Modal for Selected Treatment */}
         {selectedCard && (
           <div style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
@@ -205,24 +198,24 @@ export default function Treatments() {
                 marginBottom: '8px',
                 display: 'block'
               }}>
-                Specialized Procedure
+                Specialized Neuro Procedure
               </span>
 
-              <h3 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '8px' }}>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '8px' }}>
                 {selectedCard.title}
               </h3>
 
-              <p style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--accent-teal)', marginBottom: '24px' }}>
+              <p style={{ fontSize: '0.975rem', fontWeight: 600, color: 'var(--accent-teal)', marginBottom: '24px' }}>
                 Key Intervention: {selectedCard.procedure}
               </p>
 
               {/* Grid content inside modal */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 
-                {/* Symptoms block */}
+                {/* Indications & Symptoms block */}
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    Warning Signs & Symptoms
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Clinical Indications & Warning Signs
                   </h4>
                   <ul style={{ paddingLeft: '20px', fontSize: '0.925rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {selectedCard.symptoms.map((symptom, i) => (
@@ -238,8 +231,8 @@ export default function Treatments() {
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)'
                 }}>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    How Endovascular Treatment Works
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Procedure Details & Mechanics
                   </h4>
                   <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                     {selectedCard.details}
@@ -253,7 +246,7 @@ export default function Treatments() {
                 <button onClick={() => setSelectedCard(null)} className="btn btn-secondary" style={{ padding: '8px 16px' }}>
                   Close Details
                 </button>
-                <a href="#booking" onClick={() => setSelectedCard(null)} className="btn btn-primary" style={{ padding: '8px 16px', backgroundColor: selectedCard.color }}>
+                <a href="#booking" onClick={() => setSelectedCard(null)} className="btn btn-primary" style={{ padding: '8px 16px', backgroundColor: selectedCard.color, color: '#ffffff' }}>
                   Book Consultation
                 </a>
               </div>

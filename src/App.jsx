@@ -1,22 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import WhatIsINR from './components/WhatIsINR';
+import ConditionsTreated from './components/ConditionsTreated';
+import SymptomsWarning from './components/SymptomsWarning';
 import About from './components/About';
 import Gallery from './components/Gallery';
-import Treatments from './components/Treatments';
-import Publications from './components/Publications';
-import Testimonials from './components/Testimonials';
 import Scheduler from './components/Scheduler';
+import SecondOpinion from './components/SecondOpinion';
 import Footer from './components/Footer';
 import './App.css';
 
 function App() {
+  const [view, setView] = useState('home');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#second-opinion') {
+        setView('second-opinion');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleOpenSecondOpinion = () => {
+    window.location.hash = '#second-opinion';
+    setView('second-opinion');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToHome = () => {
+    window.location.hash = '';
+    setView('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
       width: '100%',
+      maxWidth: '100%',
+      overflowX: 'hidden',
       position: 'relative'
     }}>
       {/* Background overlays for visual aesthetics */}
@@ -32,16 +62,22 @@ function App() {
       }} />
 
       {/* Global shell layout */}
-      <Navbar />
+      <Navbar onOpenSecondOpinion={handleOpenSecondOpinion} onBackHome={handleBackToHome} isSecondOpinion={view === 'second-opinion'} />
       
-      <main style={{ flex: 1, zIndex: 1 }}>
-        <Hero />
-        <About />
-        <Gallery />
-        <Treatments />
-        <Publications />
-        <Testimonials />
-        <Scheduler />
+      <main style={{ flex: 1, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+        {view === 'second-opinion' ? (
+          <SecondOpinion onBack={handleBackToHome} />
+        ) : (
+          <>
+            <Hero onOpenSecondOpinion={handleOpenSecondOpinion} />
+            <WhatIsINR />
+            <ConditionsTreated />
+            <SymptomsWarning />
+            <About />
+            <Gallery />
+            <Scheduler />
+          </>
+        )}
       </main>
 
       <Footer />

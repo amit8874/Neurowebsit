@@ -60,7 +60,12 @@ export default function Publications() {
   );
 
   return (
-    <section id="research" className="py-24 relative" style={{ transition: 'background-color var(--transition-normal)' }}>
+    <section id="research" className="py-24 relative overflow-hidden" style={{
+      transition: 'background-color var(--transition-normal)',
+      width: '100%',
+      maxWidth: '100%',
+      overflow: 'hidden'
+    }}>
       <div className="glow-blob glow-blob-blue" style={{ bottom: '10%', left: '5%' }} />
       
       <div className="container relative z-10">
