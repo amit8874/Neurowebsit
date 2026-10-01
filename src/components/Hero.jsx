@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Star, Activity, Zap, ShieldAlert, Scan, FileSearch, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpg';
+import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
 import banner1Img from '../assets/banner1-.jpeg';
 import banner2Img from '../assets/banner2-.jpeg';
+import banner3Img from '../assets/banner3.jpeg';
+import banner4Img from '../assets/banner4.jpeg';
 
 const heroSlides = [
   {
@@ -19,61 +21,19 @@ const heroSlides = [
   },
   {
     id: 3,
-    badge: "Keyhole Surgery Alternative",
-    title: "Aneurysm Coiling &",
-    highlight: "Flow Diversion",
-    subhead: "No Skull Opening Required",
-    description: "Ultra-soft platinum coils and Stent-Assisted Coiling (SAC) navigate directly inside cerebral aneurysms to seal them and prevent devastating brain hemorrhage.",
-    primaryCta: { text: "Aneurysm Consult", href: "#booking", icon: <Calendar size={18} /> },
-    secondaryCta: { text: "Inspect Case Studies", href: "#gallery" },
-    rightType: "image",
-    imageUrl: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=800&auto=format&fit=crop",
-    statusBadge: { title: "Endovascular Coiling", subtext: "Platinum Micro-coils", color: "#06b6d4" },
-    stats: [
-      { value: "3 Days", label: "Average Hospital Stay" },
-      { value: "Zero Skull Cut", label: "Minimally Invasive" },
-      { value: "Flow Diverters", label: "Advanced Stenting" }
-    ]
+    isBannerOnly: true,
+    title: "Banner 3",
+    imageUrl: banner3Img
   },
   {
     id: 4,
-    badge: "Sub-Millimeter Diagnostic Precision",
-    title: "3D Cerebral & Spinal",
-    highlight: "DSA Angiography",
-    subhead: "Gold Standard Vessel Mapping",
-    description: "Rotational Digital Subtraction Angiography (DSA) capturing 3D cerebrovascular architecture with sub-millimeter detail for pin-point diagnosis of blockages & shunts.",
-    primaryCta: { text: "Schedule DSA Scan", href: "#booking", icon: <Scan size={18} /> },
-    secondaryCta: { text: "Learn About DSA", href: "#treatments" },
-    rightType: "image",
-    imageUrl: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=800&auto=format&fit=crop",
-    statusBadge: { title: "Diagnostic Cath Lab", subtext: "3D Rotational Angio", color: "#10b981" },
-    stats: [
-      { value: "Sub-mm", label: "Spatial Resolution" },
-      { value: "500+", label: "Diagnostic Scans" },
-      { value: "Gold Standard", label: "Vascular Imaging" }
-    ]
-  },
-  {
-    id: 5,
-    badge: "Subspecialty Academic Review",
-    title: "Diagnostic Neuro-Review",
-    highlight: "MRI & CT Second Opinion",
-    subhead: "Comprehensive Scan Analysis",
-    description: "Expert neuroradiological consultation reviewing high-resolution MRI, CT Angiography, DWI/PWI sequences, and inconclusive scans to deliver unambiguous diagnosis.",
-    primaryCta: { text: "Get 2nd Opinion", href: "#booking", icon: <FileSearch size={18} /> },
-    secondaryCta: { text: "Read Publications", href: "#research" },
-    rightType: "image",
-    imageUrl: "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=800&auto=format&fit=crop",
-    statusBadge: { title: "Subspecialty Neuro-Review", subtext: "DM Neuroradiology", color: "#8b5cf6" },
-    stats: [
-      { value: "DM Fellow", label: "SCTIMST Trained" },
-      { value: "Multi-Modality", label: "MRI / CT / Vessel Wall" },
-      { value: "Clear Clarity", label: "Diagnostic Reports" }
-    ]
+    isBannerOnly: true,
+    title: "Banner 4",
+    imageUrl: banner4Img
   }
 ];
 
-export default function Hero() {
+export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -147,13 +107,18 @@ export default function Hero() {
           <div
             key={slide.id}
             className="hero-slide-animation flex justify-center items-center"
+            onClick={() => {
+              if (onOpenBookingModal) onOpenBookingModal();
+            }}
             style={{
               width: '100vw',
               marginLeft: 'calc(-50vw + 50%)',
               marginRight: 'calc(-50vw + 50%)',
               padding: '0',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              cursor: 'pointer'
             }}
+            title="Click to Book an Appointment"
           >
             <div style={{
               width: '100%',
@@ -176,10 +141,10 @@ export default function Hero() {
           </div>
         ) : (
           <div key={slide.id} className="grid grid-cols-2 items-center hero-slide-animation hero-slide-stage" style={{ gap: '24px' }}>
-            
+
             {/* Left Column: Dynamic Slide Text & CTA */}
             <div className="hero-text-col" style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
+
               {/* Top Badge */}
               <div className="flex items-center" style={{
                 alignSelf: 'flex-start',
@@ -282,7 +247,7 @@ export default function Hero() {
 
             {/* Right Column: Slide Image / Animated SVG Frame */}
             <div className="flex justify-center hero-image-col" style={{ position: 'relative' }}>
-              <div 
+              <div
                 className="glass-panel hero-image-panel"
                 style={{
                   width: '100%',
@@ -312,9 +277,9 @@ export default function Hero() {
                     }} />
 
                     {/* Animated Brain and Synapses SVG */}
-                    <svg 
-                      viewBox="0 0 400 400" 
-                      fill="none" 
+                    <svg
+                      viewBox="0 0 400 400"
+                      fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       style={{ width: '90%', height: '90%' }}
                     >
@@ -322,33 +287,33 @@ export default function Hero() {
                       <circle cx="200" cy="200" r="120" stroke="rgba(var(--accent-teal-rgb), 0.08)" strokeWidth="1" />
                       <circle cx="200" cy="200" r="80" stroke="rgba(var(--accent-teal-rgb), 0.1)" strokeWidth="1" />
 
-                      <path 
-                        d="M190 60 C140 60, 90 90, 80 140 C70 190, 100 230, 90 270 C80 310, 120 340, 160 340 C180 340, 190 320, 190 300 Z" 
-                        stroke="rgba(var(--accent-teal-rgb), 0.3)" 
+                      <path
+                        d="M190 60 C140 60, 90 90, 80 140 C70 190, 100 230, 90 270 C80 310, 120 340, 160 340 C180 340, 190 320, 190 300 Z"
+                        stroke="rgba(var(--accent-teal-rgb), 0.3)"
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
 
-                      <path 
-                        d="M210 60 C260 60, 310 90, 320 140 C330 190, 300 230, 310 270 C320 310, 280 340, 240 340 C220 340, 210 320, 210 300 Z" 
-                        stroke="rgba(var(--accent-teal-rgb), 0.3)" 
+                      <path
+                        d="M210 60 C260 60, 310 90, 320 140 C330 190, 300 230, 310 270 C320 310, 280 340, 240 340 C220 340, 210 320, 210 300 Z"
+                        stroke="rgba(var(--accent-teal-rgb), 0.3)"
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
 
-                      <path 
+                      <path
                         className="neuro-path"
-                        d="M190 300 C150 280, 140 220, 170 180 C200 140, 120 120, 110 160 C100 200, 120 220, 140 240" 
-                        stroke="var(--accent-teal)" 
-                        strokeWidth="3" 
+                        d="M190 300 C150 280, 140 220, 170 180 C200 140, 120 120, 110 160 C100 200, 120 220, 140 240"
+                        stroke="var(--accent-teal)"
+                        strokeWidth="3"
                         strokeLinecap="round"
                       />
 
-                      <path 
+                      <path
                         className="neuro-path"
-                        d="M210 300 C250 280, 260 220, 230 180 C200 140, 280 120, 290 160 C300 200, 280 220, 260 240" 
-                        stroke="var(--accent-blue)" 
-                        strokeWidth="3" 
+                        d="M210 300 C250 280, 260 220, 230 180 C200 140, 280 120, 290 160 C300 200, 280 220, 260 240"
+                        stroke="var(--accent-blue)"
+                        strokeWidth="3"
                         strokeLinecap="round"
                       />
 
@@ -421,7 +386,7 @@ export default function Hero() {
           paddingTop: '16px',
           borderTop: '1px solid var(--border-color)'
         }}>
-          
+
           {/* Slide dots & progress indicators */}
           <div className="flex items-center" style={{ gap: '12px' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-teal)' }}>

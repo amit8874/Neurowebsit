@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock } from 'lucide-react';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpg';
+import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
 
 export default function SecondOpinion({ onBack }) {
   const [formData, setFormData] = useState({
@@ -82,7 +82,7 @@ export default function SecondOpinion({ onBack }) {
           background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.06) 0%, rgba(59, 130, 246, 0.04) 100%)'
         }}>
           <div className="grid grid-cols-2 items-center" style={{ gap: '32px' }}>
-            
+
             {/* Left Header Content */}
             <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{
@@ -157,11 +157,22 @@ export default function SecondOpinion({ onBack }) {
 
               {/* Action Buttons */}
               <div className="flex" style={{ gap: '14px', marginTop: '12px' }}>
-                <a href="#submit-report-form" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
+                <a
+                  href="#submit-report-form"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.getElementById('submit-report-form');
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: '12px 24px', fontSize: '0.95rem' }}
+                >
                   <Send size={18} />
                   Submit Your Reports
                 </a>
-                <a href="tel:08429021960" className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
+                <a href="tel:09208430808" className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
                   <Phone size={18} />
                   Call Instead
                 </a>
@@ -179,15 +190,15 @@ export default function SecondOpinion({ onBack }) {
                 border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-secondary)'
               }}>
-                <div style={{ height: '360px', overflow: 'hidden', position: 'relative' }}>
+                <div style={{ height: '400px', width: '100%', overflow: 'hidden', position: 'relative' }}>
                   <img
                     src={drDewanshImg}
                     alt="Dr. Dewansh Mishra"
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'contain',
-                      objectPosition: 'top center',
+                      objectFit: 'cover',
+                      objectPosition: 'center 15%',
                       display: 'block'
                     }}
                   />
@@ -256,105 +267,9 @@ export default function SecondOpinion({ onBack }) {
           </div>
         </div>
 
-        {/* Section 2: Before You Consult (What to bring with you) */}
-        <div style={{ marginBottom: '48px', textAlign: 'left' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <span className="section-tag">Before You Consult</span>
-            <h2 className="section-title" style={{ fontSize: '2rem', marginTop: '6px' }}>
-              What to bring with you
-            </h2>
-          </div>
 
-          <div className="grid grid-cols-2" style={{ gap: '16px' }}>
-            {[
-              "Hard copies of all your treatment reports & scan CDs (MRI, CT, DSA Angiography)",
-              "A copy of your post-operative report, if you had surgery earlier",
-              "A copy of your discharge summary, if treated at a hospital before",
-              "A current treatment plan summary recommended by your physician",
-              "Details of your current medication plan and dosage schedule"
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="glass-panel flex items-center"
-                style={{
-                  padding: '16px 20px',
-                  borderRadius: 'var(--radius-md)',
-                  gap: '14px',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                <div style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  <Check size={16} />
-                </div>
-                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {item}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Section 3: The Facility (Advanced imaging technology at Apollomedics) */}
-        <div style={{ marginBottom: '48px', textAlign: 'left' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <span className="section-tag">The Facility</span>
-            <h2 className="section-title" style={{ fontSize: '2rem', marginTop: '6px' }}>
-              Advanced imaging technology at Apollomedics
-            </h2>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }} className="facility-grid">
-            <div className="interactive-card" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-glass)' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(6, 182, 212, 0.1)', color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                <Building2 size={20} />
-              </div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>3D Rotational Angio</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                State-of-the-art biplane neuro-angiography cath lab for precise 3D vessel mapping.
-              </p>
-            </div>
-
-            <div className="interactive-card" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-glass)' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                <FileText size={20} />
-              </div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>3D CT Technology</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                Advanced software for high-precision 3D reconstruction and procedure planning.
-              </p>
-            </div>
-
-            <div className="interactive-card" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-glass)' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                <ShieldCheck size={20} />
-              </div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>High-Resolution Suites</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                Fully equipped dedicated suite for emergency stroke thrombectomy & coiling.
-              </p>
-            </div>
-
-            <div className="interactive-card" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', backgroundColor: 'var(--bg-glass)' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                <Award size={20} />
-              </div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '8px' }}>Endovascular Capability</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                Microcatheter micro-access suitable for AVM, dAVF, and spinal embolization.
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Section 4: Get Started (Interactive Submission Form) */}
         <div id="submit-report-form" style={{ textAlign: 'left' }}>
@@ -616,9 +531,9 @@ export default function SecondOpinion({ onBack }) {
                   </div>
 
                   <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <a href="tel:08429021960" className="btn btn-secondary" style={{ padding: '12px 20px', fontSize: '0.9rem' }}>
+                    <a href="tel:09208430808" className="btn btn-secondary" style={{ padding: '12px 20px', fontSize: '0.9rem' }}>
                       <Phone size={16} />
-                      Call +91 084290 21960
+                      Call +91 092084 30808
                     </a>
                     <button type="submit" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
                       <Send size={16} />

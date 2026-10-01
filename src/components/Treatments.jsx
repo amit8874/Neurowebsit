@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Zap, Activity, Scan, FileSearch, ArrowRight } from 'lucide-react';
 
-export default function Treatments() {
+export default function Treatments({ onOpenBookingModal }) {
   const [selectedCard, setSelectedCard] = useState(null);
 
   const treatments = [
@@ -246,9 +246,16 @@ export default function Treatments() {
                 <button onClick={() => setSelectedCard(null)} className="btn btn-secondary" style={{ padding: '8px 16px' }}>
                   Close Details
                 </button>
-                <a href="#booking" onClick={() => setSelectedCard(null)} className="btn btn-primary" style={{ padding: '8px 16px', backgroundColor: selectedCard.color, color: '#ffffff' }}>
+                <button
+                  onClick={() => {
+                    setSelectedCard(null);
+                    if (onOpenBookingModal) onOpenBookingModal();
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 16px', backgroundColor: selectedCard.color, color: '#ffffff', cursor: 'pointer' }}
+                >
                   Book Consultation
-                </a>
+                </button>
               </div>
 
             </div>

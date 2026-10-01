@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Stethoscope, ChevronDown, Activity, Sparkles } from 'lucide-react';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpg';
+import drDewanshImg from '../assets/dr.dewan.jpeg';
 
-export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinion }) {
+export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatientStories, onOpenBlog, onOpenBookingModal, onOpenContactModal, onBackHome, isSecondOpinion, isGallery, isPatientStories, isBlog }) {
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState(null);
 
   useEffect(() => {
@@ -44,39 +45,91 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
     },
     {
       label: 'Patient Stories',
-      href: '#about',
+      href: '#patient-stories',
+      isPatientStories: true,
       bg: '#065f46',
       hoverBg: '#10b981',
       shadow: '0 4px 14px rgba(16, 185, 129, 0.45)'
     },
     {
-      label: 'Media',
+      label: 'Gallery',
       href: '#gallery',
+      isGallery: true,
       bg: '#581c87',
       hoverBg: '#8b5cf6',
       shadow: '0 4px 14px rgba(139, 92, 246, 0.45)'
     },
     {
       label: 'Blog',
-      href: '#about',
+      href: '#blog',
+      isBlog: true,
       bg: '#881337',
       hoverBg: '#e11d48',
       shadow: '0 4px 14px rgba(225, 29, 72, 0.45)'
     },
     {
       label: 'Contact',
-      href: '#booking',
+      href: '#contact',
+      isContact: true,
       bg: '#78350f',
       hoverBg: '#d97706',
       shadow: '0 4px 14px rgba(217, 119, 6, 0.45)'
     }
   ];
 
-  const handleNavClick = (href) => {
-    if (isSecondOpinion && onBackHome) {
+  const handleNavClick = (linkItem) => {
+    const targetHref = typeof linkItem === 'object' ? linkItem.href : linkItem;
+    const isMedia = typeof linkItem === 'object' && linkItem.isGallery;
+    const isStories = typeof linkItem === 'object' && linkItem.isPatientStories;
+    const isBlogLink = typeof linkItem === 'object' && linkItem.isBlog;
+    const isContactLink = (typeof linkItem === 'object' && linkItem.isContact) || targetHref === '#contact';
+    const isBooking = (typeof linkItem === 'object' && linkItem.isBooking) || targetHref === '#booking';
+
+    if (isContactLink) {
+      if (onOpenContactModal) {
+        onOpenContactModal();
+        return;
+      }
+      window.location.hash = '#contact';
+      return;
+    }
+
+    if (isBooking) {
+      if (onOpenBookingModal) onOpenBookingModal();
+      return;
+    }
+
+    if (isMedia) {
+      if (onOpenGallery) {
+        onOpenGallery();
+        return;
+      }
+      window.location.hash = '#gallery';
+      return;
+    }
+
+    if (isStories) {
+      if (onOpenPatientStories) {
+        onOpenPatientStories();
+        return;
+      }
+      window.location.hash = '#patient-stories';
+      return;
+    }
+
+    if (isBlogLink) {
+      if (onOpenBlog) {
+        onOpenBlog();
+        return;
+      }
+      window.location.hash = '#blog';
+      return;
+    }
+
+    if ((isSecondOpinion || isGallery || isPatientStories || isBlog) && onBackHome) {
       onBackHome();
       setTimeout(() => {
-        const el = document.querySelector(href);
+        const el = document.querySelector(targetHref);
         if (el) el.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
@@ -119,21 +172,21 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
           </a>
 
           {/* Center: Navigation Buttons */}
-          <div className="desktop-nav-links" style={{ gap: '10px' }}>
+          <div className="desktop-nav-links" style={{ gap: '22px' }}>
             {navLinks.map((link, idx) => {
               const isHovered = hoveredNav === idx;
 
               const buttonStyle = {
                 backgroundColor: isHovered ? link.hoverBg : link.bg,
                 color: '#ffffff',
-                padding: '8px 16px',
+                padding: '9px 18px',
                 borderRadius: '9999px',
                 fontWeight: 700,
                 fontSize: '0.875rem',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '6px',
                 boxShadow: isHovered ? link.shadow : '0 2px 6px rgba(0, 0, 0, 0.18)',
                 transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -231,7 +284,10 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
                   style={buttonStyle}
                   onMouseEnter={() => setHoveredNav(idx)}
                   onMouseLeave={() => setHoveredNav(null)}
-                  onClick={() => handleNavClick(link.href)}
+                  onClick={(e) => {
+                    if (link.isGallery || link.isPatientStories || link.isBlog || link.isContact) e.preventDefault();
+                    handleNavClick(link);
+                  }}
                 >
                   {link.label}
                 </a>
@@ -248,13 +304,13 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
             >
               2nd Opinion
             </button>
-            <a
-              href="#booking"
+            <button
+              onClick={onOpenBookingModal}
               className="btn-pill btn-blue-box-darktext"
-              onClick={() => handleNavClick('#booking')}
+              style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Book Appointment
-            </a>
+            </button>
             <button
               onClick={toggleTheme}
               className="theme-toggle-btn"
@@ -304,28 +360,40 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
             if (link.hasDropdown) {
               return (
                 <div key={link.label} style={{ display: 'flex', flexDirection: 'column', margin: '4px 12px' }}>
-                  <div style={{
-                    backgroundColor: link.bg,
-                    color: '#ffffff',
-                    padding: '8px 16px',
-                    borderRadius: '9999px',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '4px'
-                  }}>
+                  <button
+                    onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
+                    style={{
+                      backgroundColor: link.bg,
+                      color: '#ffffff',
+                      padding: '8px 16px',
+                      borderRadius: '9999px',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      width: '100%',
+                      fontFamily: 'inherit'
+                    }}
+                  >
                     <span>{link.label}</span>
-                    <ChevronDown size={14} color="#ffffff" />
-                  </div>
-                  {link.items.map((sub, subIdx) => (
+                    <ChevronDown size={14} color="#ffffff" style={{
+                      transition: 'transform 0.25s ease',
+                      transform: isMobileDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+                    }} />
+                  </button>
+
+                  {isMobileDropdownOpen && link.items.map((sub, subIdx) => (
                     <a
                       key={subIdx}
                       href={sub.isSecondOpinion ? '#second-opinion' : sub.href}
                       className="mobile-drawer-link"
                       onClick={(e) => {
                         setIsOpen(false);
+                        setIsMobileDropdownOpen(false);
                         if (sub.isSecondOpinion) {
                           e.preventDefault();
                           if (onOpenSecondOpinion) onOpenSecondOpinion();
@@ -345,9 +413,10 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => {
+                onClick={(e) => {
                   setIsOpen(false);
-                  handleNavClick(link.href);
+                  if (link.isGallery || link.isPatientStories) e.preventDefault();
+                  handleNavClick(link);
                 }}
                 style={{
                   backgroundColor: link.bg,
@@ -376,17 +445,16 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
           >
             2nd Opinion
           </button>
-          <a
-            href="#booking"
-            className="mobile-drawer-btn mobile-drawer-btn-blue"
+          <button
             onClick={() => {
               setIsOpen(false);
-              handleNavClick('#booking');
+              if (onOpenBookingModal) onOpenBookingModal();
             }}
-            style={{ width: 'calc(100% - 24px)', margin: '4px 12px' }}
+            className="mobile-drawer-btn mobile-drawer-btn-blue"
+            style={{ border: 'none', cursor: 'pointer', textAlign: 'center', width: 'calc(100% - 24px)', margin: '4px 12px', display: 'block' }}
           >
             Book Appointment
-          </a>
+          </button>
         </div>
       )}
 
@@ -399,13 +467,15 @@ export default function Navbar({ onOpenSecondOpinion, onBackHome, isSecondOpinio
         >
           2nd Opinion
         </button>
-        <a
-          href="#booking"
+        <button
+          onClick={() => {
+            if (onOpenBookingModal) onOpenBookingModal();
+          }}
           className="mobile-bottom-btn mobile-bottom-blue"
-          onClick={() => handleNavClick('#booking')}
+          style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           Book an Appointment
-        </a>
+        </button>
       </div>
     </>
   );

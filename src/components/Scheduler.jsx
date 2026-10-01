@@ -89,7 +89,9 @@ export default function Scheduler() {
   ];
 
   return (
-    <section id="booking" className="py-24 relative overflow-hidden" style={{
+    <section id="booking" className="relative overflow-hidden" style={{
+      paddingTop: '40px',
+      paddingBottom: '50px',
       transition: 'background-color var(--transition-normal)',
       width: '100%',
       maxWidth: '100%',

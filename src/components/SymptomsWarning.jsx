@@ -4,68 +4,70 @@ import { ShieldAlert, AlertTriangle, Activity, Heart, ArrowRight, Zap } from 'lu
 const symptomsList = [
   {
     icon: '🧠',
-    title: 'Sudden weakness or trouble speaking',
-    desc: 'If one side of the face or body suddenly becomes weak, speech becomes unclear, or you cannot understand someone properly, it may be a stroke. Get emergency medical help immediately.',
-    badge: 'High Stroke Risk',
+    title: 'Sudden weakness or speech difficulty',
+    desc: 'Sudden face drooping or slurred speech can signal an acute stroke requiring emergency care.',
+    badge: 'Stroke Risk',
     color: '#e11d48'
   },
   {
     icon: '💥',
-    title: 'Sudden, very severe headache',
-    desc: 'A sudden headache that becomes extremely severe within seconds can be a warning sign of a ruptured brain aneurysm. This needs emergency medical attention.',
-    badge: 'Thunderclap Headache',
+    title: 'Thunderclap severe headache',
+    desc: 'An explosive, sudden headache can indicate a ruptured brain aneurysm and needs instant attention.',
+    badge: 'Aneurysm Warning',
     color: '#f59e0b'
   },
   {
     icon: '👂',
-    title: 'Hearing your heartbeat in your ear',
-    desc: 'A repeated whooshing or pulsing sound in one ear that matches your heartbeat is called pulsatile tinnitus. Sometimes it can be related to blood-flow problems around the head or neck and should be evaluated.',
+    title: 'Pulsatile sound in one ear',
+    desc: 'Hearing a whooshing heartbeat sound in one ear can stem from abnormal head or neck blood flow.',
     badge: 'Pulsatile Tinnitus',
     color: '#06b6d4'
   },
   {
     icon: '😵',
-    title: 'Sudden dizziness or balance problems',
-    desc: 'Sudden dizziness, difficulty walking, loss of balance, or double vision — especially when combined with weakness or speech problems — should not be ignored because they can occur with stroke.',
-    badge: 'Balance / Vision Risk',
+    title: 'Sudden dizziness & double vision',
+    desc: 'Loss of balance, vertigo, or sudden double vision may indicate cerebrovascular involvement.',
+    badge: 'Balance Risk',
     color: '#3b82f6'
   },
   {
     icon: '👁️',
-    title: 'Unusual changes in one eye',
-    desc: 'Redness, bulging, unusual movement/pulsation, or vision changes in one eye can sometimes be related to abnormal blood-vessel connections around the eye and brain.',
-    badge: 'Orbital Vascular',
+    title: 'Eye redness or bulging',
+    desc: 'Unusual eyeball pulsation, swelling, or visual changes can signal carotid-cavernous fistulas.',
+    badge: 'Eye Vascular',
     color: '#8b5cf6'
   },
   {
     icon: '🦵',
-    title: 'Increasing weakness in the legs',
-    desc: 'Gradually worsening weakness, numbness, or changes in bladder or bowel control can sometimes be related to problems affecting the blood vessels of the spine.',
-    badge: 'Spinal Cord Warning',
+    title: 'Progressive leg weakness',
+    desc: 'Gradual numbness or weakness in legs can be tied to underlying spinal cord vascular malformations.',
+    badge: 'Spine Warning',
     color: '#ec4899'
   },
   {
     icon: '👀',
-    title: 'Headache with brief vision loss',
-    desc: 'Repeated headaches together with short episodes of blurred, dim, or "greyed-out" vision should be checked by a doctor.',
-    badge: 'Intracranial Pressure',
+    title: 'Headache with vision dimming',
+    desc: 'Recurrent headaches combined with brief greyouts in vision indicate intracranial pressure issues.',
+    badge: 'Skull Pressure',
     color: '#10b981'
   },
   {
     icon: '👃',
-    title: 'Frequent or heavy nosebleeds',
-    desc: 'Nosebleeds that happen repeatedly or are unusually difficult to stop may sometimes have an underlying blood-vessel cause and should be evaluated.',
-    badge: 'Head & Neck Vessels',
+    title: 'Recurrent heavy nosebleeds',
+    desc: 'Unusually persistent nosebleeds may sometimes be caused by head and neck vascular malformations.',
+    badge: 'Head & Neck',
     color: '#6366f1'
   }
 ];
 
-export default function SymptomsWarning() {
+export default function SymptomsWarning({ onOpenBookingModal }) {
   return (
     <section
       id="symptoms-warning"
-      className="py-20 relative overflow-hidden"
+      className="relative overflow-hidden"
       style={{
+        paddingTop: '36px',
+        paddingBottom: '45px',
         backgroundColor: 'var(--bg-secondary)',
         borderTop: '1px solid var(--border-color)',
         borderBottom: '1px solid var(--border-color)',
@@ -172,21 +174,6 @@ export default function SymptomsWarning() {
                   {item.desc}
                 </p>
               </div>
-
-              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                <a href="#booking" style={{
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  color: item.color,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  textDecoration: 'none'
-                }}>
-                  Seek Specialist Opinion
-                  <ArrowRight size={12} />
-                </a>
-              </div>
             </div>
           ))}
         </div>
@@ -238,9 +225,15 @@ export default function SymptomsWarning() {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0, justifyContent: 'center' }}>
-              <a href="#booking" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+              <button
+                onClick={() => {
+                  if (onOpenBookingModal) onOpenBookingModal();
+                }}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '0.85rem', cursor: 'pointer' }}
+              >
                 Schedule Priority Consult
-              </a>
+              </button>
             </div>
           </div>
         </div>

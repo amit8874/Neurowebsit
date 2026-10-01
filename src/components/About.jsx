@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Award, BookOpen, HeartPulse, GraduationCap, Building2, UserCheck, ShieldCheck } from 'lucide-react';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpg';
+import drDewanshImg from '../assets/dr.dewan.jpeg';
 
 export default function About() {
   const [activeTab, setActiveTab] = useState('credentials');
@@ -91,8 +91,10 @@ export default function About() {
   return (
     <section
       id="about"
-      className="py-20 relative overflow-hidden"
+      className="relative overflow-hidden"
       style={{
+        paddingTop: '45px',
+        paddingBottom: '36px',
         backgroundColor: 'var(--bg-primary)',
         transition: 'background-color var(--transition-normal)',
         width: '100%',
@@ -122,52 +124,66 @@ export default function About() {
           display: 'grid',
           gridTemplateColumns: '1.15fr 0.85fr',
           gap: '40px',
-          alignItems: 'stretch'
+          alignItems: 'stretch',
+          width: '100%',
+          maxWidth: '100%',
+          boxSizing: 'border-box'
         }}>
           
           {/* Left Column: Detailed Biography Text */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left', justifyContent: 'center' }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            textAlign: 'left',
+            justifyContent: 'center',
+            minWidth: 0,
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}>
             
             <p style={{
-              fontSize: '1.05rem',
+              fontSize: '1.025rem',
               color: 'var(--text-primary)',
-              lineHeight: '1.75',
+              lineHeight: '1.7',
               margin: 0
             }}>
-              <strong>Dr. Dewansh Mishra</strong> is a highly skilled Interventional Neuroradiologist with an <strong>MBBS</strong> and <strong>MD in Radiodiagnosis</strong>, and a <strong>DM in Neuroradiology</strong> from the prestigious <strong>Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum</strong>. With over 6 years of experience in radiology, including specialized training in diagnostic and interventional neuroradiology, he has expertise in the management of stroke, brain aneurysms, vascular malformations (AVMs, dAVFs), spinal vascular disorders, and craniofacial vascular malformations. Dr. Mishra is proficient in advanced endovascular procedures such as mechanical thrombectomy, aneurysm coiling, flow diversion, and embolization therapies including AVM embolization and MMA embolization.
+              <strong>Dr. Dewansh Mishra</strong> is a Consultant Interventional Neuroradiologist at Apollomedics Super Speciality Hospital, Lucknow. He holds a <strong>DM in Neuroradiology</strong> from the prestigious <strong>SCTIMST, Trivandrum</strong>, alongside MD Radiodiagnosis and MBBS.
             </p>
 
             <p style={{
-              fontSize: '1.025rem',
+              fontSize: '0.975rem',
               color: 'var(--text-secondary)',
-              lineHeight: '1.75',
+              lineHeight: '1.7',
               margin: 0
             }}>
-              His postdoctoral thesis focused on brain dural arteriovenous fistulas and cognitive function analysis, highlighting the neurocognitive implications of these vascular lesions. Dr. Mishra has also contributed significantly to neuroradiological research, including a study on the role of MRA in carotid-cavernous fistulas (CCF), and has identified the central non-enhancement sign in imaging of carotid body tumors, aiding in improved diagnostic accuracy.
-            </p>
-
-            <p style={{
-              fontSize: '1.025rem',
-              color: 'var(--text-secondary)',
-              lineHeight: '1.75',
-              margin: 0
-            }}>
-              An executive member of <strong>ISVIR-UP (Indian Society of Vascular and Interventional Radiology – Uttar Pradesh chapter)</strong>, Dr. Mishra actively participates in academic initiatives and training programs. He is dedicated to delivering compassionate, evidence-based, and minimally invasive care aimed at improving neurological health and patient outcomes.
+              With 6+ years of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care. He is an executive member of ISVIR-UP dedicated to delivering compassionate, evidence-based patient outcomes.
             </p>
 
             {/* Interactive Tabs Box for Credentials & Highlights */}
-            <div className="glass-panel" style={{
+            <div className="glass-panel about-glass-box" style={{
               marginTop: '10px',
               padding: '20px 24px',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-color)',
-              boxShadow: 'var(--shadow-md)'
+              boxShadow: 'var(--shadow-md)',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box',
+              minWidth: 0,
+              overflow: 'hidden'
             }}>
-              <div style={{
+              <div className="about-tabs-header" style={{
                 display: 'flex',
                 borderBottom: '1px solid var(--border-color)',
                 marginBottom: '16px',
-                gap: '6px'
+                gap: '6px',
+                overflowX: 'auto',
+                whiteSpace: 'nowrap',
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box'
               }}>
                 {tabs.map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -175,6 +191,7 @@ export default function About() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
+                      className="about-tab-btn"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -188,7 +205,9 @@ export default function About() {
                         borderBottom: isActive ? '2px solid var(--accent-teal)' : '2px solid transparent',
                         cursor: 'pointer',
                         transition: 'all var(--transition-fast)',
-                        marginBottom: '-1px'
+                        marginBottom: '-1px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
                       }}
                     >
                       {tab.icon}
@@ -198,7 +217,7 @@ export default function About() {
                 })}
               </div>
 
-              <div>
+              <div style={{ minWidth: 0, width: '100%' }}>
                 {renderTabContent()}
               </div>
             </div>
@@ -212,13 +231,14 @@ export default function About() {
             justifyContent: 'center',
             width: '100%',
             height: '100%',
-            minHeight: '620px'
+            minHeight: '340px',
+            minWidth: 0
           }}>
             <div className="glass-panel" style={{
               width: '100%',
               height: '100%',
-              minHeight: '620px',
-              maxHeight: '750px',
+              minHeight: '340px',
+              maxHeight: '500px',
               borderRadius: 'var(--radius-lg)',
               overflow: 'hidden',
               boxShadow: 'var(--shadow-xl)',
@@ -235,8 +255,8 @@ export default function About() {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'contain',
-                  objectPosition: 'center top',
+                  objectFit: 'cover',
+                  objectPosition: 'top center',
                   display: 'block'
                 }}
               />
@@ -252,18 +272,65 @@ export default function About() {
         @media (max-width: 992px) {
           .about-grid {
             grid-template-columns: 1fr !important;
-            gap: 32px !important;
+            gap: 28px !important;
+            width: 100% !important;
           }
-          .about-grid > div:last-child {
-            min-height: 480px !important;
-          }
-        }
-        @media (max-width: 640px) {
-          #about .section-title {
-            font-size: 1.7rem !important;
+          .about-grid > div {
+            min-width: 0 !important;
+            width: 100% !important;
           }
           .about-grid > div:last-child {
             min-height: 380px !important;
+          }
+        }
+        @media (max-width: 640px) {
+          #about {
+            padding-top: 36px !important;
+            padding-bottom: 36px !important;
+            overflow-x: hidden !important;
+          }
+          #about .section-title {
+            font-size: 1.6rem !important;
+          }
+          .about-grid {
+            gap: 20px !important;
+            width: 100% !important;
+          }
+          .about-grid > div {
+            min-width: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .about-grid > div:last-child {
+            min-height: 320px !important;
+            max-height: 420px !important;
+            height: 360px !important;
+          }
+          .about-grid img {
+            object-fit: cover !important;
+            object-position: center 15% !important;
+          }
+          .about-tabs-header {
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            padding-bottom: 4px !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            width: 100% !important;
+          }
+          .about-tabs-header::-webkit-scrollbar {
+            display: none;
+          }
+          .about-tab-btn {
+            padding: 6px 10px !important;
+            font-size: 0.775rem !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+          .about-glass-box {
+            padding: 14px 12px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
           }
         }
       `}</style>

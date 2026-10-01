@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Sparkles, Activity, ArrowRight, ShieldCheck, CheckCircle } from 'lucide-react';
+import { Search, Sparkles, Activity, ArrowRight, ShieldCheck, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Import all 12 condition asset images
 import aneurysmImg from '../assets/word_media_image10.webp';
@@ -21,31 +21,31 @@ const conditionsData = [
     categoryTag: 'Brain Arteries',
     title: 'Brain Aneurysm',
     image: aneurysmImg,
-    description: 'A bulge in the wall of a brain artery. Many are discovered incidentally. Some can rupture, causing a life-threatening bleed. Understanding the risk factors and available treatments can help patients and families make informed decisions.'
+    description: 'A bulge in a brain blood vessel. Sealed safely via keyhole coiling to prevent hemorrhage.'
   },
   {
     id: 'stroke',
     category: 'Emergency Care',
     categoryTag: 'Stroke & Clots',
-    title: 'Stroke',
+    title: 'Brain Stroke',
     image: strokeImg,
-    description: 'A sudden interruption of blood supply to part of the brain. Ischaemic stroke — caused by a clot — accounts for most cases. Knowing the warning signs and acting within the treatment window can make a significant difference to outcomes.'
+    description: 'Sudden clot blocking brain blood flow. Restored urgently via mechanical thrombectomy.'
   },
   {
     id: 'avm',
     category: 'Vascular Shunts',
     categoryTag: 'AVM & Shunts',
-    title: 'Brain AVM (Arteriovenous Malformation)',
+    title: 'Brain AVM',
     image: avmImg,
-    description: 'An abnormal tangle of blood vessels in the brain, present from birth, in which arteries and veins are directly connected without the usual network of capillaries. AVMs can bleed, cause seizures, or produce headaches.'
+    description: 'Abnormal tangle of brain blood vessels present from birth. Treated with targeted liquid embolization.'
   },
   {
     id: 'carotid',
     category: 'Arterial Bleeding',
     categoryTag: 'Brain Arteries',
-    title: 'Carotid & Vertebral Artery Disease',
+    title: 'Carotid Artery Disease',
     image: carotidImg,
-    description: 'Narrowing or blockage of the main arteries supplying the brain, usually due to atherosclerosis. This is one of the leading preventable causes of stroke. It often produces no symptoms until a TIA or stroke occurs.'
+    description: 'Narrowing of main neck arteries supplying the brain. Managed with angioplasty & stenting.'
   },
   {
     id: 'venous',
@@ -53,7 +53,7 @@ const conditionsData = [
     categoryTag: 'Venous & Pressure',
     title: 'Venous Sinus Stenosis & IIH',
     image: venousImg,
-    description: 'Narrowing of the brain\'s venous drainage channels can raise pressure inside the skull, causing persistent headaches, pulsatile tinnitus, and visual disturbances. This condition is often underdiagnosed, particularly in young women.'
+    description: 'Narrowing of brain drainage veins causing skull pressure, severe headaches, and pulsatile tinnitus.'
   },
   {
     id: 'spinal',
@@ -61,15 +61,15 @@ const conditionsData = [
     categoryTag: 'Spinal Cord',
     title: 'Spinal Vascular Malformations',
     image: spinalImg,
-    description: 'Abnormal blood vessel connections within or around the spinal cord. These conditions are rare and frequently misdiagnosed for years. Progressive leg weakness and bladder changes are common presentations.'
+    description: 'Abnormal blood vessel connections around the spinal cord causing progressive weakness and pain.'
   },
   {
     id: 'headneck',
     category: 'Spinal & Skull Base',
     categoryTag: 'Face & Neck',
-    title: 'Head & Neck Vascular Disorders',
+    title: 'Head & Neck Disorders',
     image: headNeckImg,
-    description: 'A group of vascular conditions affecting the face, skull base, and neck — including carotid-cavernous fistulas, scalp AVMs, and vascular causes of recurrent nosebleeds. Symptoms vary widely depending on which vessels are involved.'
+    description: 'Vascular lesions of face, scalp, and neck causing recurrent nosebleeds or vascular malformations.'
   },
   {
     id: 'tumor',
@@ -77,23 +77,23 @@ const conditionsData = [
     categoryTag: 'Skull Base Tumors',
     title: 'Tumor Embolization',
     image: tumorImg,
-    description: 'Certain brain and skull-base tumours have a rich blood supply that makes surgery risky. Embolization before surgery reduces this blood supply, making the operation safer and more effective. It is a preparatory procedure, not a standalone treatment for the tumour itself.'
+    description: 'Pre-operative embolization to shut off blood supply to hypervascular brain and skull base tumors.'
   },
   {
     id: 'davf',
     category: 'Vascular Shunts',
     categoryTag: 'AVM & Shunts',
-    title: 'Dural Arteriovenous Fistulas (dAVFs)',
+    title: 'Dural AV Fistulas (dAVFs)',
     image: avmImg,
-    description: 'An abnormal connection between an artery and a vein in the coverings of the brain or spine. dAVFs can cause a whooshing sound in the ear, headaches, and, if untreated, bleeding. They are often treatable entirely through endovascular embolization.'
+    description: 'Abnormal artery-vein connection in brain coverings, treated completely via catheter embolization.'
   },
   {
     id: 'ccf',
     category: 'Vascular Shunts',
     categoryTag: 'Eye & Orbit',
-    title: 'Carotid-Cavernous Fistulas (CCFs)',
+    title: 'Carotid-Cavernous Fistulas',
     image: ccfImg,
-    description: 'An abnormal connection between the carotid artery and the venous network behind the eye. A CCF can cause a red, bulging, or pulsating eye and visual disturbance. It can be closed from the inside using endovascular techniques.'
+    description: 'Vascular connection behind the eye causing eye redness or bulging. Fixed via micro-coiling.'
   },
   {
     id: 'mma',
@@ -101,21 +101,22 @@ const conditionsData = [
     categoryTag: 'Brain Bleeds',
     title: 'MMA Embolization',
     image: mmaImg,
-    description: 'Embolization of the middle meningeal artery is a newer endovascular technique used to treat certain chronic brain bleeds (chronic subdural haematoma) and some cases of unremitting headache. It addresses the source of the problem through a tiny catheter, often avoiding open surgery.'
+    description: 'Minimally invasive embolization for chronic subdural hematomas, avoiding open skull drainage.'
   },
   {
     id: 'csf',
     category: 'Venous & CSF',
     categoryTag: 'CSF Leaks',
-    title: 'CSF Leak & CSF-Venous Fistula',
+    title: 'CSF Leak & Fistula',
     image: csfImg,
-    description: 'A leak of cerebrospinal fluid can cause severe positional headaches that are often missed for years. When the cause is a CSF-venous fistula, it can be treated with a precise, minimally invasive embolization — sealing the leak and relieving the headache.'
+    description: 'Leak of spinal fluid causing positional headaches, sealed via targeted endovascular intervention.'
   }
 ];
 
-export default function ConditionsTreated() {
+export default function ConditionsTreated({ onOpenBookingModal }) {
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const categories = [
     'All',
@@ -126,6 +127,16 @@ export default function ConditionsTreated() {
     'Venous & Pressure'
   ];
 
+  const handleTabChange = (cat) => {
+    setActiveTab(cat);
+    setIsExpanded(false);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setIsExpanded(false);
+  };
+
   const filteredConditions = conditionsData.filter(item => {
     const matchesTab = activeTab === 'All' || item.categoryTag === activeTab;
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,11 +144,15 @@ export default function ConditionsTreated() {
     return matchesTab && matchesSearch;
   });
 
+  const displayedConditions = isExpanded ? filteredConditions : filteredConditions.slice(0, 6);
+
   return (
     <section 
       id="conditions-treated" 
-      className="py-20 relative overflow-hidden"
+      className="relative overflow-hidden"
       style={{
+        paddingTop: '45px',
+        paddingBottom: '30px',
         transition: 'background-color var(--transition-normal)',
         width: '100%',
         maxWidth: '100%'
@@ -201,7 +216,7 @@ export default function ConditionsTreated() {
               return (
                 <button
                   key={cat}
-                  onClick={() => setActiveTab(cat)}
+                  onClick={() => handleTabChange(cat)}
                   style={{
                     padding: '8px 16px',
                     borderRadius: 'var(--radius-full)',
@@ -237,7 +252,7 @@ export default function ConditionsTreated() {
               type="text"
               placeholder="Search condition or symptom..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               style={{
                 border: 'none',
                 background: 'none',
@@ -257,7 +272,7 @@ export default function ConditionsTreated() {
           gap: '28px'
         }} className="conditions-creative-grid">
           
-          {filteredConditions.map((item) => (
+          {displayedConditions.map((item) => (
             <div
               key={item.id}
               className="interactive-card"
@@ -350,34 +365,32 @@ export default function ConditionsTreated() {
 
                 {/* Action Link Footer */}
                 <div style={{
-                  marginTop: '20px',
-                  paddingTop: '14px',
+                  marginTop: '16px',
+                  paddingTop: '12px',
                   borderTop: '1px solid var(--border-color)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between'
+                  justifyContent: 'flex-end'
                 }}>
-                  <a href="#booking" style={{
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    color: 'var(--accent-teal)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    textDecoration: 'none'
-                  }}>
-                    Consult Specialist
+                  <button
+                    onClick={() => {
+                      if (onOpenBookingModal) onOpenBookingModal();
+                    }}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: 'var(--accent-teal)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    Book Consult
                     <ArrowRight size={14} />
-                  </a>
-
-                  <a href="#treatments" style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 500,
-                    color: 'var(--text-muted)',
-                    textDecoration: 'none'
-                  }}>
-                    Learn Options
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -385,6 +398,48 @@ export default function ConditionsTreated() {
           ))}
 
         </div>
+
+        {/* See More / See Less Toggle Button */}
+        {filteredConditions.length > 6 && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button
+              onClick={() => {
+                if (isExpanded) {
+                  setIsExpanded(false);
+                  const el = document.getElementById('conditions-treated');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  setIsExpanded(true);
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 28px',
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: 'var(--radius-full)',
+                border: '1.5px solid var(--accent-teal)',
+                color: 'var(--accent-teal)',
+                backgroundColor: 'rgba(6, 182, 212, 0.06)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--accent-teal)';
+                e.currentTarget.style.color = '#ffffff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(6, 182, 212, 0.06)';
+                e.currentTarget.style.color = 'var(--accent-teal)';
+              }}
+            >
+              <span>{isExpanded ? 'See Less' : 'See More Conditions'}</span>
+              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+          </div>
+        )}
 
       </div>
 

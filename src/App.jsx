@@ -2,23 +2,57 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import WhatIsINR from './components/WhatIsINR';
+import ScanOpinionEstimator from './components/ScanOpinionEstimator';
 import ConditionsTreated from './components/ConditionsTreated';
 import SymptomsWarning from './components/SymptomsWarning';
 import About from './components/About';
+import Testimonials from './components/Testimonials';
 import Gallery from './components/Gallery';
-import Scheduler from './components/Scheduler';
+import PatientStories from './components/PatientStories';
+import Blog from './components/Blog';
 import SecondOpinion from './components/SecondOpinion';
+import BookingModal from './components/BookingModal';
+import ContactModal from './components/ContactModal';
 import Footer from './components/Footer';
 import './App.css';
 
 function App() {
   const [view, setView] = useState('home');
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
-      if (window.location.hash === '#second-opinion') {
+      const hash = window.location.hash;
+      if (hash === '#booking') {
+        setIsBookingModalOpen(true);
+        return;
+      }
+      if (hash === '#contact') {
+        setIsContactModalOpen(true);
+        return;
+      }
+      if (hash === '#second-opinion' || hash === '#submit-report-form') {
         setView('second-opinion');
+        if (hash === '#second-opinion') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (hash === '#submit-report-form') {
+          setTimeout(() => {
+            const el = document.getElementById('submit-report-form');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 100);
+        }
+      } else if (hash === '#gallery' || hash === '#media') {
+        setView('gallery');
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (hash === '#patient-stories' || hash === '#stories') {
+        setView('patient-stories');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (hash === '#blog' || hash.startsWith('#blog-')) {
+        setView('blog');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setView('home');
       }
     };
 
@@ -31,6 +65,32 @@ function App() {
     window.location.hash = '#second-opinion';
     setView('second-opinion');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenGallery = () => {
+    window.location.hash = '#gallery';
+    setView('gallery');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenPatientStories = () => {
+    window.location.hash = '#patient-stories';
+    setView('patient-stories');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenBlog = () => {
+    window.location.hash = '#blog';
+    setView('blog');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenBookingModal = () => {
+    setIsBookingModalOpen(true);
+  };
+
+  const handleOpenContactModal = () => {
+    setIsContactModalOpen(true);
   };
 
   const handleBackToHome = () => {
@@ -62,25 +122,55 @@ function App() {
       }} />
 
       {/* Global shell layout */}
-      <Navbar onOpenSecondOpinion={handleOpenSecondOpinion} onBackHome={handleBackToHome} isSecondOpinion={view === 'second-opinion'} />
-      
+      <Navbar
+        onOpenSecondOpinion={handleOpenSecondOpinion}
+        onOpenGallery={handleOpenGallery}
+        onOpenPatientStories={handleOpenPatientStories}
+        onOpenBlog={handleOpenBlog}
+        onOpenBookingModal={handleOpenBookingModal}
+        onOpenContactModal={handleOpenContactModal}
+        onBackHome={handleBackToHome}
+        isSecondOpinion={view === 'second-opinion'}
+        isGallery={view === 'gallery'}
+        isPatientStories={view === 'patient-stories'}
+        isBlog={view === 'blog'}
+      />
+
       <main style={{ flex: 1, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
         {view === 'second-opinion' ? (
-          <SecondOpinion onBack={handleBackToHome} />
+          <SecondOpinion onBack={handleBackToHome} onOpenBookingModal={handleOpenBookingModal} />
+        ) : view === 'gallery' ? (
+          <Gallery onBack={handleBackToHome} isPage={true} onOpenBookingModal={handleOpenBookingModal} />
+        ) : view === 'patient-stories' ? (
+          <PatientStories onBack={handleBackToHome} isPage={true} onOpenBookingModal={handleOpenBookingModal} />
+        ) : view === 'blog' ? (
+          <Blog onBack={handleBackToHome} onOpenBookingModal={handleOpenBookingModal} />
         ) : (
           <>
-            <Hero onOpenSecondOpinion={handleOpenSecondOpinion} />
-            <WhatIsINR />
-            <ConditionsTreated />
-            <SymptomsWarning />
-            <About />
-            <Gallery />
-            <Scheduler />
+            <Hero onOpenSecondOpinion={handleOpenSecondOpinion} onOpenBookingModal={handleOpenBookingModal} />
+            <WhatIsINR onOpenBookingModal={handleOpenBookingModal} />
+            <ScanOpinionEstimator onOpenBookingModal={handleOpenBookingModal} />
+            <ConditionsTreated onOpenBookingModal={handleOpenBookingModal} />
+            <SymptomsWarning onOpenBookingModal={handleOpenBookingModal} />
+            <About onOpenBookingModal={handleOpenBookingModal} />
+            <Testimonials />
           </>
         )}
       </main>
 
-      <Footer />
+      <Footer onOpenBookingModal={handleOpenBookingModal} onOpenSecondOpinion={handleOpenSecondOpinion} onOpenContactModal={handleOpenContactModal} />
+
+      {/* Global Smart Booking Pop-Up Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+      />
+
+      {/* Global Contact Pop-Up Modal */}
+      <ContactModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
     </div>
   );
 }

@@ -150,19 +150,19 @@ export default function Footer() {
               <div className="flex" style={{ gap: '12px' }}>
                 <MapPin size={22} style={{ color: '#38bdf8', flexShrink: 0 }} />
                 <span style={{ color: '#cbd5e1', lineHeight: '1.5' }}>
-                  KBC-31, Apollomedics Super Speciality Hospital, Kanpur - Lucknow Rd, Sector B, LDA Colony, Lucknow, Uttar Pradesh 226012
+                  Dr Aditi's Dental & Maxillofacial Clinic, 2, Vivek Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010
                 </span>
               </div>
 
               <div className="flex" style={{ gap: '12px', alignItems: 'center' }}>
                 <Phone size={18} style={{ color: '#38bdf8', flexShrink: 0 }} />
-                <a href="tel:08429021960" style={{ fontWeight: 500, color: '#ffffff' }}>
-                  084290 21960
+                <a href="tel:09208430808" style={{ fontWeight: 500, color: '#ffffff' }}>
+                  092084 30808
                 </a>
               </div>
 
               <a 
-                href="https://maps.google.com/?q=Apollomedics+Super+Speciality+Hospital+Lucknow" 
+                href="https://maps.google.com/?q=Dr+Aditi%27s+Dental+%26+Maxillofacial+Clinic+Lucknow" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{
