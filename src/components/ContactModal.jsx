@@ -20,7 +20,7 @@ export default function ContactModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const mapSearchQuery = encodeURIComponent("Dr Aditi's Dental & Maxillofacial Clinic, 2, Vivek Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010");
+  const mapSearchQuery = encodeURIComponent("Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012");
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
   const embedMapUrl = `https://maps.google.com/maps?q=${mapSearchQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
@@ -98,10 +98,10 @@ export default function ContactModal({ isOpen, onClose }) {
         {/* Modal Header */}
         <div style={{ marginBottom: '20px', textAlign: 'left' }}>
           <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>
-            Contact Clinic & Doctor
+            Contact Hospital & Doctor
           </h3>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            Reach out via phone, email, or visit our clinic location below.
+            Reach out via phone, email, or visit our location at Apollomedics Super Speciality Hospital, Lucknow.
           </p>
         </div>
 
@@ -228,10 +228,10 @@ export default function ContactModal({ isOpen, onClose }) {
             </div>
             <div>
               <span style={{ fontSize: '0.725rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Address (Lucknow)
+                Hospital Location (Lucknow)
               </span>
               <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: '1.4', display: 'block', marginTop: '2px' }}>
-                Dr Aditi's Dental & Maxillofacial Clinic, 2, Vivek Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010
+                Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012
               </span>
             </div>
           </div>

@@ -21,6 +21,9 @@ export default function About() {
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
                 Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum
               </p>
+              <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-teal)', marginTop: '4px', margin: 0 }}>
+                • An Institution of National Importance (INI) Under GOI
+              </p>
             </div>
             <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
               <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', margin: 0 }}>MD - Radiodiagnosis</p>
@@ -52,7 +55,7 @@ export default function About() {
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
               <ShieldCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>6+ Years Specialized Expertise</p>
+                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>8+ Years Specialized Expertise</p>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: '1.5' }}>
                   Extensive clinical experience in endovascular stroke care, diagnostic 3D cerebral angiograms, and non-surgical neurovascular treatments.
                 </p>
@@ -149,7 +152,7 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              <strong>Dr. Dewansh Mishra</strong> is a Consultant Interventional Neuroradiologist at Apollomedics Super Speciality Hospital, Lucknow. He holds a <strong>DM in Neuroradiology</strong> from the prestigious <strong>SCTIMST, Trivandrum</strong>, alongside MD Radiodiagnosis and MBBS.
+              <strong>Dr. Dewansh Mishra</strong> is a Consultant Interventional Neuroradiologist at Apollomedics Super Speciality Hospital, Lucknow. He holds a <strong>DM in Neuroradiology</strong> from the prestigious <strong>SCTIMST, Trivandrum</strong> (An Institution of National Importance [INI] under GOI), alongside MD Radiodiagnosis and MBBS.
             </p>
 
             <p style={{
@@ -158,7 +161,7 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              With 6+ years of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care. He is an executive member of ISVIR-UP dedicated to delivering compassionate, evidence-based patient outcomes.
+              With 8+ years of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care. He is an executive member of ISVIR-UP dedicated to delivering compassionate, evidence-based patient outcomes.
             </p>
 
             {/* Interactive Tabs Box for Credentials & Highlights */}

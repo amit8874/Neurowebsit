@@ -167,7 +167,7 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
             </div>
             <div className="doctor-info">
               <span className="doctor-name">Dr Dewansh Mishra</span>
-              <span className="doctor-qual">DM, Neurointervention (SCTIMST)</span>
+              <span className="doctor-qual">Brain &amp; Spine Vascular Specialist</span>
             </div>
           </a>
 
@@ -337,7 +337,7 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
           </div>
           <div className="mobile-doctor-info">
             <span className="mobile-doctor-name">Dr Dewansh Mishra</span>
-            <span className="mobile-doctor-qual">DM, Neurointervention (SCTIMST)</span>
+            <span className="mobile-doctor-qual">Brain &amp; Spine Vascular Specialist</span>
           </div>
         </div>
 

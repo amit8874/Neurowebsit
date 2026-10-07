@@ -35,17 +35,20 @@ const heroSlides = [
 
 export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // Auto-play loop slider (every 4.5 seconds continuously, without stopping on hover)
+  // Auto-play loop slider (every 4.5 seconds, pauses on hover)
   useEffect(() => {
+    if (isPaused) return;
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 4500);
 
     return () => clearInterval(timer);
-  }, [currentSlide]);
+  }, [isPaused]);
 
   const handleNext = () => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -82,6 +85,8 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
     <section
       id="hero"
       className="relative overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

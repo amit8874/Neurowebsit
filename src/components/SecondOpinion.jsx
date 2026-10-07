@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
-import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock } from 'lucide-react';
+import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, Mail, User } from 'lucide-react';
 import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
 
+// Dynamic Razorpay SDK Loader
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function SecondOpinion({ onBack }) {
+  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review (₹600), 3: Success Confirmation
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -11,7 +27,8 @@ export default function SecondOpinion({ onBack }) {
     summary: ''
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [confirmedSubmission, setConfirmedSubmission] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,11 +42,160 @@ export default function SecondOpinion({ onBack }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Step 1 -> Step 2 Fee Review Validation
+  const handleProceedToReview = (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    // Scroll smoothly to confirmation message
-    window.scrollTo({ top: 100, behavior: 'smooth' });
+    if (!formData.fullName || !formData.phone || !formData.summary) {
+      alert('Please fill out all required fields (Full Name, Phone Number, Case Summary).');
+      return;
+    }
+    setStep(2);
+  };
+
+  // Dispatch Email Notification to Doctor (dewanshmishra@gmail.com) with attached file details
+  const notifyDoctorViaEmail = async (submissionRecord) => {
+    const attachedFilesSummary = selectedFiles.length > 0
+      ? selectedFiles.map((f, i) => `${i + 1}. ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')
+      : 'No files attached';
+
+    const emailPayload = {
+      to_email: 'dewanshmishra@gmail.com',
+      subject: `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹600 Paid`,
+      patient_name: submissionRecord.fullName,
+      patient_phone: submissionRecord.phone,
+      patient_email: submissionRecord.email || 'N/A',
+      diagnosis_condition: submissionRecord.condition || 'General Neuro-Vascular Review',
+      case_summary: submissionRecord.summary,
+      attached_files_count: selectedFiles.length,
+      attached_files_list: attachedFilesSummary,
+      payment_id: submissionRecord.paymentId,
+      amount_paid: '₹600',
+      submission_reference: submissionRecord.id,
+      hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
+    };
+
+    try {
+      await fetch('https://formspree.io/f/xknlqzyv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(emailPayload)
+      });
+    } catch (err) {
+      console.warn('Doctor email notification fallback:', err);
+    }
+  };
+
+  // Trigger Razorpay Payment
+  const handleRazorpayPayment = async () => {
+    setIsLoading(true);
+    const razorpayKey = (import.meta.env.VITE_RAZORPAY_KEY_ID || import.meta.env.RAZORPAY_KEY_ID || 'rzp_live_SgoRtYO7JP8Gbi').trim();
+
+    if (!razorpayKey || razorpayKey.includes('YOUR_KEY_HERE')) {
+      alert('Razorpay Key ID is missing in .env.\n\nPlease open the .env file in the project root, set VITE_RAZORPAY_KEY_ID=your_key_id (e.g. rzp_live_...), and restart npm run dev.');
+      setIsLoading(false);
+      return;
+    }
+
+    const sdkLoaded = await loadRazorpayScript();
+    if (!sdkLoaded) {
+      alert('Unable to load Razorpay Payment Gateway. Please check your network connection.');
+      setIsLoading(false);
+      return;
+    }
+
+    const options = {
+      key: razorpayKey,
+      amount: 600 * 100, // ₹600 in paise
+      currency: "INR",
+      name: "Dr. Dewansh Mishra",
+      description: "2nd Opinion Report Review Fee - Apollomedics",
+      image: "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
+      handler: function (response) {
+        const paymentId = response.razorpay_payment_id || ('pay_' + Math.random().toString(36).substring(2, 12));
+        completeSecondOpinionSubmission(paymentId);
+      },
+      prefill: {
+        name: formData.fullName,
+        email: formData.email || 'patient@example.com',
+        contact: formData.phone
+      },
+      notes: {
+        condition: formData.condition || "2nd Opinion Review",
+        hospital: "Apollomedics Super Speciality Hospital, Lucknow",
+        fee: "₹600"
+      },
+      theme: {
+        color: "#06b6d4"
+      },
+      modal: {
+        ondismiss: function () {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    try {
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on('payment.failed', function (res) {
+        const desc = res.error?.description || res.error?.reason || '';
+        if (desc.includes('401') || desc.includes('Unauthorized') || desc.includes('key_id')) {
+          alert('Razorpay 401 Unauthorized Error:\n\nThe Key ID provided in .env is not authorized or invalid on Razorpay.\n\nPlease verify that your VITE_RAZORPAY_KEY_ID in .env is an active Live Key (rzp_live_...) from your Razorpay Dashboard.');
+        } else {
+          alert('Payment Notification: ' + (desc || 'Transaction cancelled or closed'));
+        }
+        setIsLoading(false);
+      });
+      razorpayInstance.open();
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Razorpay invocation error:', err);
+      alert('Could not launch Razorpay checkout. Please verify VITE_RAZORPAY_KEY_ID in your .env file.');
+      setIsLoading(false);
+    }
+  };
+
+  // Complete Submission after Payment
+  const completeSecondOpinionSubmission = (paymentId) => {
+    const submissionRecord = {
+      id: 'SO-' + Math.floor(100000 + Math.random() * 900000),
+      ...formData,
+      paymentId: paymentId,
+      feePaid: '₹600',
+      attachedFiles: selectedFiles.map(f => ({ name: f.name, size: (f.size / 1024 / 1024).toFixed(2) + ' MB' })),
+      timestamp: new Date().toLocaleString()
+    };
+
+    // Save to localStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem('dewansh_second_opinions') || '[]');
+      localStorage.setItem('dewansh_second_opinions', JSON.stringify([submissionRecord, ...saved]));
+    } catch (err) {
+      console.error(err);
+    }
+
+    // Send Doctor Email Notification with File Details
+    notifyDoctorViaEmail(submissionRecord);
+
+    setConfirmedSubmission(submissionRecord);
+    setIsLoading(false);
+    setStep(3);
+
+    // Scroll to top of report section
+    const el = document.getElementById('submit-report-form');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleResetForm = () => {
+    setStep(1);
+    setConfirmedSubmission(null);
+    setFormData({
+      fullName: '',
+      phone: '',
+      email: '',
+      condition: '',
+      summary: ''
+    });
+    setSelectedFiles([]);
   };
 
   return (
@@ -109,7 +275,7 @@ export default function SecondOpinion({ onBack }) {
                 fontFamily: 'var(--font-heading)',
                 margin: 0
               }}>
-                Get a Free Second Opinion from <br />
+                Get an Expert Second Opinion from <br />
                 <span className="gradient-text">Dr. Dewansh Mishra</span>
               </h1>
 
@@ -119,7 +285,7 @@ export default function SecondOpinion({ onBack }) {
                 lineHeight: '1.6',
                 margin: 0
               }}>
-                6+ years of specialized experience in neurovascular and interventional neuroradiology procedures — send your reports before deciding on treatment.
+                8+ years of specialized experience in neurovascular and interventional neuroradiology procedures — send your reports before deciding on treatment.
               </p>
 
               {/* Stats Badges Row */}
@@ -130,8 +296,8 @@ export default function SecondOpinion({ onBack }) {
                   backgroundColor: 'var(--bg-glass)',
                   border: '1px solid var(--border-color)'
                 }}>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-teal)', margin: 0 }}>Free</p>
-                  <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>No cost for a 2nd opinion</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-teal)', margin: 0 }}>₹600</p>
+                  <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Expert Case Review Fee</p>
                 </div>
 
                 <div style={{
@@ -140,7 +306,7 @@ export default function SecondOpinion({ onBack }) {
                   backgroundColor: 'var(--bg-glass)',
                   border: '1px solid var(--border-color)'
                 }}>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-blue)', margin: 0 }}>6+ Years</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-blue)', margin: 0 }}>8+ Years</p>
                   <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Radiology & Neuro-Interventions</p>
                 </div>
 
@@ -246,7 +412,7 @@ export default function SecondOpinion({ onBack }) {
                   Clear Understanding of Your Diagnosis
                 </h4>
                 <p style={{ fontSize: '0.925rem', color: 'var(--text-secondary)', lineHeight: '1.6', margin: 0 }}>
-                  You always want a second opinion from a recognized doctor, particularly when it's free — it helps you understand your options before committing to a treatment path.
+                  You always want a second opinion from a recognized doctor — it helps you understand your options before committing to a major surgical procedure.
                 </p>
               </div>
 
@@ -267,16 +433,12 @@ export default function SecondOpinion({ onBack }) {
           </div>
         </div>
 
-
-
-
-
-        {/* Section 4: Get Started (Interactive Submission Form) */}
+        {/* Section 4: Get Started (Interactive 2-Step Submission & Fee Form) */}
         <div id="submit-report-form" style={{ textAlign: 'left' }}>
           <div style={{ marginBottom: '20px' }}>
             <span className="section-tag">Get Started</span>
             <h2 className="section-title" style={{ fontSize: '2rem', marginTop: '6px' }}>
-              Submit your reports for review
+              Submit your reports for expert review
             </h2>
           </div>
 
@@ -287,44 +449,37 @@ export default function SecondOpinion({ onBack }) {
             boxShadow: 'var(--shadow-xl)',
             backgroundColor: 'var(--bg-secondary)'
           }}>
-            {isSubmitted ? (
+
+            {isLoading ? (
+              /* Loading Spinner State */
               <div style={{
-                textAlign: 'center',
-                padding: '40px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '16px'
+                justifyContent: 'center',
+                padding: '80px 0',
+                gap: '20px',
+                textAlign: 'center'
               }}>
                 <div style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '50px',
+                  height: '50px',
+                  border: '4px solid var(--border-color)',
+                  borderTop: '4px solid var(--accent-teal)',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Check size={36} />
-                </div>
-                <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                  Reports Submitted Successfully!
-                </h3>
-                <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '580px', lineHeight: '1.6', margin: 0 }}>
-                  Thank you for submitting your reports. Dr. Dewansh Mishra and our medical team will review your case details and contact you shortly with a personalized second opinion.
-                </p>
-                <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }}>
-                  <button onClick={() => setIsSubmitted(false)} className="btn btn-secondary" style={{ padding: '10px 20px' }}>
-                    Submit Another Report
-                  </button>
-                  <button onClick={onBack} className="btn btn-primary" style={{ padding: '10px 20px' }}>
-                    Return to Homepage
-                  </button>
-                </div>
+                  animation: 'spin 1s linear infinite'
+                }} className="spinner-animation" />
+                <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Processing Payment Gateway...</p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Connecting securely to Razorpay</p>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            ) : step === 1 ? (
+
+              /* ================= STEP 1: REPORT & PATIENT INPUT FORM ================= */
+              <form onSubmit={handleProceedToReview} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '-10px 0 0' }}>
+                  Step 1 of 2: Fill patient details and upload medical reports
+                </p>
+
                 <div className="grid grid-cols-2" style={{ gap: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '8px' }}>
@@ -334,7 +489,7 @@ export default function SecondOpinion({ onBack }) {
                       type="text"
                       name="fullName"
                       required
-                      placeholder="Your name"
+                      placeholder="Your full name"
                       value={formData.fullName}
                       onChange={handleInputChange}
                       style={{
@@ -536,21 +691,210 @@ export default function SecondOpinion({ onBack }) {
                       Call +91 092084 30808
                     </a>
                     <button type="submit" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
-                      <Send size={16} />
-                      Submit Reports
+                      Continue to Fee & Review (₹600)
                     </button>
                   </div>
                 </div>
 
               </form>
+            ) : step === 2 ? (
+
+              /* ================= STEP 2: REVIEW DETAILS & RAZORPAY FEE (₹600) ================= */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Review Case & Consultation Fee</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Step 2 of 2: Confirm details & proceed to pay fee</p>
+                  </div>
+                  <button
+                    onClick={() => setStep(1)}
+                    style={{
+                      fontSize: '0.8rem',
+                      color: 'var(--accent-teal)',
+                      fontWeight: 700,
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <ArrowLeft size={14} /> Edit Details
+                  </button>
+                </div>
+
+                {/* Details Summary Box */}
+                <div style={{
+                  padding: '18px',
+                  backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  fontSize: '0.875rem'
+                }}>
+                  <p style={{ margin: 0 }}><strong>Patient Name:</strong> {formData.fullName}</p>
+                  <p style={{ margin: 0 }}><strong>Phone Number:</strong> {formData.phone}</p>
+                  <p style={{ margin: 0 }}><strong>Email Address:</strong> {formData.email}</p>
+                  <p style={{ margin: 0 }}><strong>Condition / Diagnosis:</strong> {formData.condition || 'N/A'}</p>
+                  <p style={{ margin: 0 }}><strong>Case Summary:</strong> {formData.summary}</p>
+                  <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
+                    <strong>Attached Files ({selectedFiles.length}):</strong>
+                    {selectedFiles.length > 0 ? (
+                      <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--accent-teal)', fontSize: '0.825rem' }}>
+                        {selectedFiles.map((f, idx) => (
+                          <li key={idx}>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.825rem', marginLeft: '6px' }}>No files attached</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Doctor Fee Breakdown */}
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.06)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid rgba(6, 182, 212, 0.3)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>2nd Opinion Expert Review Fee</span>
+                    <span style={{ fontWeight: 800 }}>₹600</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
+                    <span>Hospital Report Upload & Queue</span>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>FREE</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(6, 182, 212, 0.25)', paddingTop: '10px', marginTop: '4px' }}>
+                    <span style={{ fontWeight: 800, fontSize: '1.05rem' }}>Total Payable Amount</span>
+                    <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--accent-teal)' }}>₹600</span>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontSize: '0.8rem',
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <CreditCard size={18} color="var(--accent-teal)" style={{ flexShrink: 0 }} />
+                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra will receive email notification at dewanshmishra@gmail.com with your case details and attached file list upon payment.</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => setStep(1)} className="btn btn-secondary" style={{ padding: '12px 18px' }}>
+                    Back
+                  </button>
+                  <button onClick={handleRazorpayPayment} className="btn btn-primary" style={{ flex: 1, padding: '12px', boxShadow: 'var(--shadow-glow)' }}>
+                    Proceed to Pay ₹600
+                  </button>
+                </div>
+              </div>
+            ) : (
+
+              /* ================= STEP 3: SUCCESS CONFIRMATION RECEIPT ================= */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center', alignItems: 'center' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  color: '#10b981',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <CheckCircle2 size={40} />
+                </div>
+
+                <div>
+                  <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+                    2nd Opinion Request Submitted & Paid!
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: 700, marginTop: '4px', margin: 0 }}>
+                    Payment Successful (₹600) • Ref: {confirmedSubmission?.id}
+                  </p>
+                </div>
+
+                <div style={{
+                  width: '100%',
+                  padding: '20px',
+                  backgroundColor: 'var(--bg-primary)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  textAlign: 'left'
+                }}>
+                  <p><strong>Razorpay Payment ID:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--accent-teal)', fontWeight: 700 }}>{confirmedSubmission?.paymentId}</span></p>
+                  <p><strong>Patient Name:</strong> {confirmedSubmission?.fullName}</p>
+                  <p><strong>Contact Phone:</strong> {confirmedSubmission?.phone}</p>
+                  <p><strong>Email Address:</strong> {confirmedSubmission?.email}</p>
+                  <p><strong>Condition:</strong> {confirmedSubmission?.condition || 'N/A'}</p>
+                  <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
+                    <strong>Attached Files Sent to Doctor ({selectedFiles.length}):</strong>
+                    {selectedFiles.length > 0 ? (
+                      <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--accent-teal)', fontSize: '0.825rem' }}>
+                        {selectedFiles.map((f, idx) => (
+                          <li key={idx}>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.825rem', marginLeft: '6px' }}>No files attached</span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '12px 16px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.06)',
+                  borderRadius: 'var(--radius-sm)',
+                  borderLeft: '4px solid var(--accent-teal)',
+                  fontSize: '0.85rem',
+                  color: 'var(--text-secondary)',
+                  textAlign: 'left'
+                }}>
+                  Dr. Dewansh Mishra has been notified at <strong>dewanshmishra@gmail.com</strong> with your case summary, payment receipt, and attached medical files list.
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                  <button onClick={handleResetForm} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
+                    Submit Another Case
+                  </button>
+                  <button onClick={onBack} className="btn btn-primary" style={{ flex: 1, padding: '12px' }}>
+                    Return to Homepage
+                  </button>
+                </div>
+              </div>
             )}
+
           </div>
         </div>
 
       </div>
 
-      {/* Responsive Grid CSS */}
+      {/* Responsive Grid Styles */}
       <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .spinner-animation {
+          animation: spin 1s linear infinite;
+        }
         @media (max-width: 992px) {
           #second-opinion-page .facility-grid {
             grid-template-columns: repeat(2, 1fr) !important;

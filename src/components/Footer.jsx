@@ -143,14 +143,14 @@ export default function Footer() {
           {/* Center Column: Address & Contact */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 600, fontFamily: 'var(--font-heading)', color: '#ffffff' }}>
-              Clinic Location
+              Hospital Location
             </h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.925rem', color: '#cbd5e1' }}>
               <div className="flex" style={{ gap: '12px' }}>
                 <MapPin size={22} style={{ color: '#38bdf8', flexShrink: 0 }} />
                 <span style={{ color: '#cbd5e1', lineHeight: '1.5' }}>
-                  Dr Aditi's Dental & Maxillofacial Clinic, 2, Vivek Khand 2, Gomti Nagar, Lucknow, Uttar Pradesh 226010
+                  Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012
                 </span>
               </div>
 
@@ -162,7 +162,7 @@ export default function Footer() {
               </div>
 
               <a 
-                href="https://maps.google.com/?q=Dr+Aditi%27s+Dental+%26+Maxillofacial+Clinic+Lucknow" 
+                href="https://maps.google.com/?q=Apollomedics+Super+Speciality+Hospital+Lucknow" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 style={{
@@ -202,9 +202,7 @@ export default function Footer() {
                 <Clock size={18} style={{ color: '#38bdf8', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <p style={{ fontWeight: 600, color: '#ffffff' }}>Monday - Saturday</p>
-                  <p style={{ color: '#cbd5e1' }}>09:00 AM - 05:00 PM</p>
-                  <p style={{ marginTop: '8px', fontWeight: 600, color: '#ffffff' }}>Sunday</p>
-                  <p style={{ color: '#cbd5e1' }}>Emergency cases only</p>
+                  <p style={{ color: '#cbd5e1' }}>10:00 AM - 07:00 PM</p>
                 </div>
               </div>
             </div>
