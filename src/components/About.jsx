@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Award, BookOpen, HeartPulse, GraduationCap, Building2, UserCheck, ShieldCheck } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
 
 export default function About() {
+  const { siteInfo } = useData();
   const [activeTab, setActiveTab] = useState('credentials');
 
   const tabs = [
@@ -110,15 +112,14 @@ export default function About() {
       <div className="glow-blob glow-blob-blue" style={{ bottom: '10%', left: '5%', opacity: 0.1 }} />
 
       <div className="container relative z-10">
-        
-        {/* Section Header */}
+               {/* Section Header */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '40px' }}>
           <span className="section-tag" style={{ marginBottom: '8px' }}>About The Specialist</span>
           <h2 className="section-title" style={{ fontSize: '2.4rem', marginBottom: '12px' }}>
-            About Dr. Dewansh Mishra
+            About {siteInfo.doctorName}
           </h2>
           <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '780px', margin: 0 }}>
-            Neurointervention Specialist • Apollomedics Super Speciality Hospital, Lucknow
+            {siteInfo.doctorTitle} • {siteInfo.hospitalName}
           </p>
         </div>
 
@@ -152,7 +153,7 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              <strong>Dr. Dewansh Mishra</strong> is a Consultant Interventional Neuroradiologist at Apollomedics Super Speciality Hospital, Lucknow. He holds a <strong>DM in Neuroradiology</strong> from the prestigious <strong>SCTIMST, Trivandrum</strong> (An Institution of National Importance [INI] under GOI), alongside MD Radiodiagnosis and MBBS.
+              <strong>{siteInfo.doctorName}</strong> is a {siteInfo.doctorTitle} at {siteInfo.hospitalName}. He holds <strong>{siteInfo.doctorQual}</strong> from {siteInfo.doctorAffiliation}, specializing in comprehensive neuro-interventional treatments.
             </p>
 
             <p style={{
@@ -161,7 +162,7 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              With 8+ years of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care. He is an executive member of ISVIR-UP dedicated to delivering compassionate, evidence-based patient outcomes.
+              With {siteInfo.experienceYears} of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.
             </p>
 
             {/* Interactive Tabs Box for Credentials & Highlights */}
@@ -253,8 +254,8 @@ export default function About() {
               padding: 0
             }}>
               <img
-                src={drDewanshImg}
-                alt="Dr. Dewansh Mishra - Neurointervention Specialist"
+                src={siteInfo.doctorPhoto || drDewanshImg}
+                alt={`${siteInfo.doctorName || 'Dr. Dewansh Mishra'} - Neurointervention Specialist`}
                 style={{
                   width: '100%',
                   height: '100%',

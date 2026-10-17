@@ -1,180 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, ArrowLeft, User, Sparkles, BookOpen, ChevronRight, Stethoscope, Share2, CheckCircle2 } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
-
-export const blogsData = [
-  {
-    id: 1,
-    slug: 'understanding-brain-aneurysms-keyhole-coiling',
-    title: 'Understanding Brain Aneurysms & Keyhole Coiling Treatment',
-    category: 'Brain Aneurysm',
-    readTime: '5 min read',
-    date: 'September 24, 2026',
-    author: 'Dr. Dewansh Mishra',
-    authorRole: 'DM, Neurointervention (SCTIMST)',
-    summary: 'An essential guide on early warning signs of brain aneurysms, unruptured versus ruptured risks, and how pinhole endovascular coiling repairs blood vessels without open skull surgery.',
-    content: [
-      {
-        type: 'paragraph',
-        text: 'A brain aneurysm is a weak, bulging spot in the wall of a cerebral artery, much like a thin balloon forming on a tire inner tube. Because arterial blood flows under high pressure, this ballooned area is vulnerable to expanding or rupturing over time.'
-      },
-      {
-        type: 'heading',
-        text: 'Early Warning Signs & The "Thunderclap" Headache'
-      },
-      {
-        type: 'paragraph',
-        text: 'Unruptured aneurysms often remain silent until detected during routine brain imaging. However, large aneurysms may cause localized pressure symptoms such as persistent pain behind one eye, sudden double vision, or pupil dilation. If an aneurysm ruptures, it produces a sudden, excruciating headache commonly described by patients as "the worst headache of my life" (thunderclap headache), often accompanied by nausea, neck stiffness, and loss of consciousness.'
-      },
-      {
-        type: 'highlight',
-        text: 'Medical Precaution: A sudden, severe headache that reaches maximum intensity within seconds requires immediate emergency evaluation at a facility with dedicated neuro-interventional care.'
-      },
-      {
-        type: 'heading',
-        text: 'How Endovascular Coiling Works'
-      },
-      {
-        type: 'paragraph',
-        text: 'Historically, treating a brain aneurysm required open surgical clipping involving a craniotomy. Today, with advanced Neuro-Interventional Radiology (INR), we can treat the vast majority of aneurysms from inside the blood vessel using keyhole endovascular techniques.'
-      },
-      {
-        type: 'paragraph',
-        text: 'Through a microscopic pinhole incision in the wrist or groin artery, a microcatheter is navigated up to the brain under high-resolution DSA guidance. Ultra-fine platinum coils are then carefully packed inside the aneurysm sac. This stops blood flow into the aneurysm, causing it to seal safely and preventing future rupture.'
-      },
-      {
-        type: 'heading',
-        text: 'Benefits & Patient Recovery'
-      },
-      {
-        type: 'list',
-        items: [
-          'No open skull incision or stitches on the head',
-          'Significantly shorter hospital stay (typically 2 to 3 days)',
-          'Minimal post-procedure pain and quick return to routine activities',
-          'High long-term occlusion success rate verified by follow-up angiography'
-        ]
-      },
-      {
-        type: 'paragraph',
-        text: 'If you or a family member have been diagnosed with an unruptured cerebral aneurysm or have a family history of vascular malformations, timely evaluation with Digital Subtraction Angiography (DSA) can help determine the safest preventive approach.'
-      }
-    ]
-  },
-  {
-    id: 2,
-    slug: 'mechanical-thrombectomy-in-acute-brain-stroke',
-    title: 'Mechanical Thrombectomy: The Golden Hours of Brain Stroke Treatment',
-    category: 'Acute Brain Stroke',
-    readTime: '6 min read',
-    date: 'September 15, 2026',
-    author: 'Dr. Dewansh Mishra',
-    authorRole: 'DM, Neurointervention (SCTIMST)',
-    summary: 'How emergency mechanical clot retrieval restores blood supply to brain tissue during an acute ischemic stroke, saving millions of brain cells every minute.',
-    content: [
-      {
-        type: 'paragraph',
-        text: 'An acute ischemic stroke occurs when a blood clot blocks a major blood vessel supplying blood to a critical area of the brain. Deprived of oxygen, approximately 1.9 million neurons die every single minute the vessel remains blocked. Rapid recognition and immediate treatment are paramount to preventing irreversible disability.'
-      },
-      {
-        type: 'heading',
-        text: 'Recognizing Stroke Symptoms: The BE-FAST Protocol'
-      },
-      {
-        type: 'paragraph',
-        text: 'Early identification saves lives. Remember the BE-FAST acronym:'
-      },
-      {
-        type: 'list',
-        items: [
-          'B - Balance: Sudden loss of balance or dizziness',
-          'E - Eyes: Sudden double vision or loss of vision in one eye',
-          'F - Face: Facial drooping or uneven smile',
-          'A - Arms: Sudden weakness or numbness in one arm or leg',
-          'S - Speech: Slurred speech or difficulty finding words',
-          'T - Time: Time to call emergency services immediately'
-        ]
-      },
-      {
-        type: 'heading',
-        text: 'What is Mechanical Thrombectomy?'
-      },
-      {
-        type: 'paragraph',
-        text: 'While intravenous clot-busting medications (IV thrombolysis) are effective for smaller blood vessels, large vessel occlusions (LVO) require mechanical clot extraction. Mechanical Thrombectomy is a life-saving procedure performed in the cath lab.'
-      },
-      {
-        type: 'paragraph',
-        text: 'Using micro-guided stent retrievers and aspiration catheters introduced through the femoral or radial artery, we navigate directly to the blocked brain artery. The clot is physically captured and suctioned out of the body within minutes, immediately restoring blood perfusion to the brain.'
-      },
-      {
-        type: 'highlight',
-        text: 'Clinical Window: Mechanical thrombectomy is proven effective within 6 hours of symptom onset, and up to 24 hours in select patients guided by advanced CT perfusion imaging.'
-      },
-      {
-        type: 'heading',
-        text: 'Why Emergency Specialized INR Care Matters'
-      },
-      {
-        type: 'paragraph',
-        text: 'Patients who undergo prompt mechanical thrombectomy have dramatically higher rates of independent recovery, walking without assistance, and returning home to their families. Rapid transfer to a comprehensive stroke center equipped with 24/7 INR expertise is the most decisive factor in stroke recovery.'
-      }
-    ]
-  },
-  {
-    id: 3,
-    slug: 'living-with-brain-avm-modern-embolization-options',
-    title: 'Living with Brain AVM: Modern Non-Surgical Embolization Options',
-    category: 'Vascular Malformation',
-    readTime: '4 min read',
-    date: 'August 28, 2026',
-    author: 'Dr. Dewansh Mishra',
-    authorRole: 'DM, Neurointervention (SCTIMST)',
-    summary: 'A detailed look at Arteriovenous Malformations (AVM), how liquid embolization agents block abnormal blood vessel tangles, and post-procedure outlook.',
-    content: [
-      {
-        type: 'paragraph',
-        text: 'A Brain Arteriovenous Malformation (AVM) is an abnormal tangle of blood vessels connecting arteries and veins in the brain. Normally, high-pressure arterial blood passes through capillaries before entering delicate veins. In an AVM, capillaries are missing, exposing fragile veins to direct high-pressure arterial flow.'
-      },
-      {
-        type: 'heading',
-        text: 'Common Symptoms of Brain AVM'
-      },
-      {
-        type: 'paragraph',
-        text: 'Brain AVMs are often congenital and may remain asymptomatic until young adulthood. Common presentation symptoms include:'
-      },
-      {
-        type: 'list',
-        items: [
-          'Unexplained seizures or epileptic fits in young adults',
-          'Localized headaches or throbbing head pain',
-          'Progressive weakness or numbness in parts of the body',
-          'Intracranial hemorrhage causing sudden neurological changes'
-        ]
-      },
-      {
-        type: 'heading',
-        text: 'Endovascular Liquid Embolization'
-      },
-      {
-        type: 'paragraph',
-        text: 'Endovascular embolization is a non-surgical procedure designed to block blood flow into the AVM nidus. Through a specialized microcatheter navigated into the feeder arteries of the AVM, medical liquid embolic agents (such as Onyx or Squid) are precisely injected.'
-      },
-      {
-        type: 'paragraph',
-        text: 'The liquid embolic solidifies inside the abnormal vessel network, sealing off the high-pressure shunts. This can completely cure smaller AVMs or safely reduce the size of larger AVMs prior to radiosurgery or microsurgery.'
-      },
-      {
-        type: 'highlight',
-        text: 'Expert Insight: Comprehensive DSA mapping is essential to carefully evaluate AVM feeders, venous drainage patterns, and associated aneurysms before deciding on the optimal treatment strategy.'
-      }
-    ]
-  }
-];
 
 export default function Blog({ onBack, onOpenBookingModal }) {
   const [selectedBlogId, setSelectedBlogId] = useState(null);
+  const { blogs: contextBlogs } = useData();
+
+  const blogsData = contextBlogs.map(b => ({
+    ...b,
+    authorRole: b.authorRole || 'DM, Neurointervention (SCTIMST)',
+    content: Array.isArray(b.content) ? b.content : [
+      { type: 'paragraph', text: b.summary || '' },
+      ...(typeof b.content === 'string' ? [{ type: 'paragraph', text: b.content }] : [])
+    ]
+  }));
 
   // Check URL hash for blog deep-linking
   useEffect(() => {

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Stethoscope, ChevronDown, Activity, Sparkles } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
 
-export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatientStories, onOpenBlog, onOpenBookingModal, onOpenContactModal, onBackHome, isSecondOpinion, isGallery, isPatientStories, isBlog }) {
+export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatientStories, onOpenBlog, onOpenBookingModal, onOpenContactModal, onOpenAdmin, onBackHome, isSecondOpinion, isGallery, isPatientStories, isBlog }) {
+  const { siteInfo } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -166,8 +168,8 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
               <div className="doctor-online-dot" />
             </div>
             <div className="doctor-info">
-              <span className="doctor-name">Dr Dewansh Mishra</span>
-              <span className="doctor-qual">Brain &amp; Spine Vascular Specialist</span>
+              <span className="doctor-name">{siteInfo?.doctorName || "Dr Dewansh Mishra"}</span>
+              <span className="doctor-qual">{siteInfo?.doctorTitle || "Brain & Spine Vascular Specialist"}</span>
             </div>
           </a>
 
@@ -318,6 +320,26 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+            <button
+              onClick={() => onOpenAdmin && onOpenAdmin()}
+              style={{
+                backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                border: '1px solid rgba(6, 182, 212, 0.25)',
+                color: 'var(--accent-teal)',
+                borderRadius: '9999px',
+                padding: '7px 12px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.2s'
+              }}
+              title="Doctor Admin Portal"
+            >
+              🔒 CMS
+            </button>
           </div>
         </div>
       </nav>
@@ -336,8 +358,8 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
             <img src={drDewanshImg} alt="Dr Dewansh Mishra" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }} />
           </div>
           <div className="mobile-doctor-info">
-            <span className="mobile-doctor-name">Dr Dewansh Mishra</span>
-            <span className="mobile-doctor-qual">Brain &amp; Spine Vascular Specialist</span>
+            <span className="mobile-doctor-name">{siteInfo?.doctorName || "Dr Dewansh Mishra"}</span>
+            <span className="mobile-doctor-qual">{siteInfo?.doctorTitle || "Brain & Spine Vascular Specialist"}</span>
           </div>
         </div>
 

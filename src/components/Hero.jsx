@@ -1,43 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Star, Activity, Zap, ShieldAlert, Scan, FileSearch, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
 import banner1Img from '../assets/banner1-.jpeg';
 import banner2Img from '../assets/banner2-.jpeg';
 import banner3Img from '../assets/banner3.jpeg';
 import banner4Img from '../assets/banner4.jpeg';
 
-const heroSlides = [
-  {
-    id: 1,
-    isBannerOnly: true,
-    title: "Banner 1",
-    imageUrl: banner1Img
-  },
-  {
-    id: 2,
-    isBannerOnly: true,
-    title: "Banner 2",
-    imageUrl: banner2Img
-  },
-  {
-    id: 3,
-    isBannerOnly: true,
-    title: "Banner 3",
-    imageUrl: banner3Img
-  },
-  {
-    id: 4,
-    isBannerOnly: true,
-    title: "Banner 4",
-    imageUrl: banner4Img
-  }
-];
-
 export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
+  const { heroSlides: contextSlides } = useData();
+  const heroSlides = contextSlides || [];
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+
+  // Reset currentSlide if array length changes (e.g. slide deleted by admin)
+  useEffect(() => {
+    if (currentSlide >= heroSlides.length) {
+      setCurrentSlide(0);
+    }
+  }, [heroSlides.length, currentSlide]);
 
   // Auto-play loop slider (every 4.5 seconds, pauses on hover)
   useEffect(() => {
@@ -111,7 +95,7 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
         {slide.isBannerOnly ? (
           <div
             key={slide.id}
-            className="hero-slide-animation flex justify-center items-center"
+            className="hero-slide-animation hero-banner-only"
             onClick={() => {
               if (onOpenBookingModal) onOpenBookingModal();
             }}
@@ -121,28 +105,27 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
               marginRight: 'calc(-50vw + 50%)',
               padding: '0',
               overflow: 'hidden',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              height: '500px',         /* fixed height — same for ALL banners */
+              position: 'relative',
+              backgroundColor: '#000'
             }}
             title="Click to Book an Appointment"
           >
-            <div style={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'var(--bg-secondary)'
-            }}>
-              <img
-                src={slide.imageUrl}
-                alt={slide.title || "Banner"}
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  objectFit: 'cover',
-                  display: 'block'
-                }}
-              />
-            </div>
+            <img
+              src={slide.imageUrl}
+              alt={slide.title || "Banner"}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'top center',  /* always show top of image, nothing hidden */
+                display: 'block'
+              }}
+            />
           </div>
         ) : (
           <div key={slide.id} className="grid grid-cols-2 items-center hero-slide-animation hero-slide-stage" style={{ gap: '24px' }}>
@@ -508,6 +491,9 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
             padding-top: calc(60px + 10px) !important;
             padding-bottom: 10px !important;
             min-height: auto !important;
+          }
+          .hero-banner-only {
+            height: 220px !important;
           }
           #hero .hero-slide-stage {
             display: flex !important;

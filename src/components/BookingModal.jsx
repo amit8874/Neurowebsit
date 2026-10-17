@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CalendarRange, User, Phone, Mail, Calendar, Clock, FileText, Upload, CheckCircle2, Send, Sparkles, ShieldCheck, ArrowLeft, CreditCard, Check } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -17,16 +18,28 @@ const loadRazorpayScript = () => {
 };
 
 export default function BookingModal({ isOpen, onClose }) {
-  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review (₹600), 3: Success Receipt
+  const { siteInfo } = useData();
+  const fee = siteInfo?.consultationFee || 500;
+  const doctorEmail = siteInfo?.email || 'dewanshmishra@gmail.com';
+
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
+    consultationMode: 'offline', // 'offline' (10 AM - 5 PM) or 'online' (11 AM - 7 PM)
     consultationType: 'aneurysm',
     date: '',
     timeSlot: 'morning',
     notes: ''
   });
+
+  const getTimeSlotLabel = (mode, slot) => {
+    if (mode === 'online') {
+      return slot === 'morning' ? 'Morning / Midday (11:00 AM - 02:00 PM)' : 'Afternoon / Evening (03:00 PM - 07:00 PM)';
+    }
+    return slot === 'morning' ? 'Morning OPD (10:00 AM - 01:00 PM)' : 'Afternoon OPD (02:00 PM - 05:00 PM)';
+  };
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,16 +87,18 @@ export default function BookingModal({ isOpen, onClose }) {
   const notifyDoctorViaEmail = async (bookingData) => {
     const emailPayload = {
       to_email: 'dewanshmishra@gmail.com',
-      subject: `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹600 Paid`,
+      subject: `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹${fee} Paid (${bookingData.consultationMode === 'online' ? 'Online Video' : 'Offline OPD'})`,
       patient_name: bookingData.name,
       patient_phone: bookingData.phone,
       patient_email: bookingData.email || 'N/A',
+      consultation_mode: bookingData.consultationMode === 'online' ? 'Online Video / Teleconsultation' : 'Offline In-Person OPD (Apollomedics Hospital)',
+      consultation_hours: bookingData.consultationMode === 'online' ? '11:00 AM - 07:00 PM' : '10:00 AM - 05:00 PM',
       consultation_specialization: getConsultLabel(bookingData.consultationType),
       appointment_date: bookingData.date,
-      time_slot: bookingData.timeSlot === 'morning' ? 'Morning (10:00 AM - 01:00 PM)' : 'Afternoon (02:00 PM - 07:00 PM)',
+      time_slot: getTimeSlotLabel(bookingData.consultationMode, bookingData.timeSlot),
       clinical_notes: bookingData.notes || 'None provided',
       payment_id: bookingData.paymentId,
-      amount_paid: '₹600',
+      amount_paid: `₹${fee}`,
       booking_reference: bookingData.id,
       hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
     };
@@ -120,7 +135,7 @@ export default function BookingModal({ isOpen, onClose }) {
 
     const options = {
       key: razorpayKey, // Real Live Razorpay Key ID
-      amount: 600 * 100, // ₹600 in paise
+      amount: fee * 100, // fee in paise (₹500 default)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
       description: "Consultation Fee - Apollomedics Hospital",
@@ -137,7 +152,7 @@ export default function BookingModal({ isOpen, onClose }) {
       notes: {
         specialization: getConsultLabel(formData.consultationType),
         hospital: "Apollomedics Super Speciality Hospital, Lucknow",
-        fee: "₹600"
+        fee: `₹${fee}`
       },
       theme: {
         color: "#06b6d4"
@@ -176,7 +191,7 @@ export default function BookingModal({ isOpen, onClose }) {
       ...formData,
       consultationTypeLabel: getConsultLabel(formData.consultationType),
       paymentId: paymentId,
-      feePaid: '₹600',
+      feePaid: `₹${fee}`,
       status: 'Paid & Confirmed',
       filesCount: selectedFiles.length,
       timestamp: new Date().toLocaleString()
@@ -321,7 +336,7 @@ export default function BookingModal({ isOpen, onClose }) {
             margin: 0
           }}>
             {step === 1 && 'Step 1 of 2: Enter patient details & preferred appointment slot'}
-            {step === 2 && 'Step 2 of 2: Review details & proceed to pay consultation fee (₹600)'}
+            {step === 2 && `Step 2 of 2: Review details & proceed to pay consultation fee (₹${fee})`}
             {step === 3 && 'Your appointment request and payment have been confirmed'}
           </p>
         </div>
@@ -504,6 +519,68 @@ export default function BookingModal({ isOpen, onClose }) {
               </div>
             </div>
 
+            {/* Consultation Mode Selection */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px' }}>
+                Consultation Mode & Hours *
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'offline', timeSlot: 'morning' }))}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: formData.consultationMode === 'offline' ? '2px solid var(--accent-teal)' : '1px solid var(--border-color)',
+                    backgroundColor: formData.consultationMode === 'offline' ? 'rgba(6, 182, 212, 0.1)' : 'var(--bg-primary)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: formData.consultationMode === 'offline' ? 'var(--accent-teal)' : 'var(--text-primary)' }}>
+                    🏥 Offline (In-Person OPD)
+                  </span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-teal)' }}>
+                    Hours: 10:00 AM – 05:00 PM
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    Apollomedics Hospital, Lucknow
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'online', timeSlot: 'morning' }))}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 'var(--radius-md)',
+                    border: formData.consultationMode === 'online' ? '2px solid #10b981' : '1px solid var(--border-color)',
+                    backgroundColor: formData.consultationMode === 'online' ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-primary)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: formData.consultationMode === 'online' ? '#10b981' : 'var(--text-primary)' }}>
+                    💻 Online Video Consult
+                  </span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10b981' }}>
+                    Hours: 11:00 AM – 07:00 PM
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    Video Call & Scan Review
+                  </span>
+                </button>
+              </div>
+            </div>
+
             {/* Date & Time Slot Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
@@ -533,7 +610,7 @@ export default function BookingModal({ isOpen, onClose }) {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>
-                  Time Slot
+                  Time Slot ({formData.consultationMode === 'online' ? '11 AM - 7 PM' : '10 AM - 5 PM'})
                 </label>
                 <div style={{
                   display: 'flex',
@@ -557,8 +634,17 @@ export default function BookingModal({ isOpen, onClose }) {
                       cursor: 'pointer'
                     }}
                   >
-                    <option value="morning">Morning (10:00 AM - 01:00 PM)</option>
-                    <option value="afternoon">Afternoon (02:00 PM - 07:00 PM)</option>
+                    {formData.consultationMode === 'online' ? (
+                      <>
+                        <option value="morning">Morning / Midday (11:00 AM - 02:00 PM)</option>
+                        <option value="afternoon">Afternoon / Evening (03:00 PM - 07:00 PM)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="morning">Morning OPD (10:00 AM - 01:00 PM)</option>
+                        <option value="afternoon">Afternoon OPD (02:00 PM - 05:00 PM)</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -610,7 +696,7 @@ export default function BookingModal({ isOpen, onClose }) {
                 boxShadow: 'var(--shadow-glow)'
               }}
             >
-              Continue to Fee & Review (₹600)
+              Continue to Fee & Review (₹{fee})
             </button>
 
           </form>
@@ -661,12 +747,16 @@ export default function BookingModal({ isOpen, onClose }) {
                   <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{formData.phone}</span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Email Address</span>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{formData.email || 'N/A'}</span>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Consultation Mode</span>
+                  <span style={{ fontWeight: 700, color: formData.consultationMode === 'online' ? '#10b981' : 'var(--accent-teal)' }}>
+                    {formData.consultationMode === 'online' ? '💻 Online Video (11 AM - 7 PM)' : '🏥 Offline OPD (10 AM - 5 PM)'}
+                  </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Appointment Date</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent-teal)' }}>{formData.date}</span>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem' }}>Appointment Slot</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent-teal)' }}>
+                    {formData.date} • {getTimeSlotLabel(formData.consultationMode, formData.timeSlot)}
+                  </span>
                 </div>
               </div>
 
@@ -688,7 +778,7 @@ export default function BookingModal({ isOpen, onClose }) {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Doctor Consultation Fee</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹600</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{fee}</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -705,7 +795,7 @@ export default function BookingModal({ isOpen, onClose }) {
                 marginTop: '4px'
               }}>
                 <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>Total Amount Payable</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent-teal)' }}>₹600</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--accent-teal)' }}>₹{fee}</span>
               </div>
             </div>
 
@@ -741,7 +831,7 @@ export default function BookingModal({ isOpen, onClose }) {
                 className="btn btn-primary"
                 style={{ flex: 1, padding: '12px', fontSize: '0.95rem', boxShadow: 'var(--shadow-glow)' }}
               >
-                Proceed to Pay ₹600
+                Proceed to Pay ₹{fee}
               </button>
             </div>
 
@@ -768,7 +858,7 @@ export default function BookingModal({ isOpen, onClose }) {
                 Booking Confirmed & Fee Paid!
               </h3>
               <p style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: 700, marginTop: '4px', margin: 0 }}>
-                Payment Successful (₹600) • Ref: {confirmedBooking?.id}
+                Payment Successful ({confirmedBooking?.feePaid || `₹${fee}`}) • Ref: {confirmedBooking?.id}
               </p>
             </div>
 
@@ -790,9 +880,17 @@ export default function BookingModal({ isOpen, onClose }) {
               </div>
               <p style={{ margin: 0 }}><strong>Patient Name:</strong> {confirmedBooking?.name}</p>
               <p style={{ margin: 0 }}><strong>Phone Number:</strong> {confirmedBooking?.phone}</p>
-              <p style={{ margin: 0 }}><strong>Appointment Date:</strong> {confirmedBooking?.date} ({confirmedBooking?.timeSlot === 'morning' ? 'Morning Slot' : 'Afternoon Slot'})</p>
+              <p style={{ margin: 0 }}>
+                <strong>Consultation Mode:</strong>{' '}
+                <span style={{ color: confirmedBooking?.consultationMode === 'online' ? '#10b981' : 'var(--accent-teal)', fontWeight: 700 }}>
+                  {confirmedBooking?.consultationMode === 'online' ? '💻 Online Video Consult (11:00 AM – 07:00 PM)' : '🏥 Offline In-Person OPD (10:00 AM – 05:00 PM)'}
+                </span>
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong>Appointment Slot:</strong> {confirmedBooking?.date} • {getTimeSlotLabel(confirmedBooking?.consultationMode, confirmedBooking?.timeSlot)}
+              </p>
               <p style={{ margin: 0 }}><strong>Specialization:</strong> {confirmedBooking?.consultationTypeLabel}</p>
-              <p style={{ margin: 0 }}><strong>Location:</strong> Apollomedics Super Speciality Hospital, Lucknow</p>
+              <p style={{ margin: 0 }}><strong>Location:</strong> {confirmedBooking?.consultationMode === 'online' ? 'Direct Video Link (Shared via Phone/WhatsApp)' : 'Apollomedics Super Speciality Hospital, Lucknow'}</p>
             </div>
 
             <div style={{

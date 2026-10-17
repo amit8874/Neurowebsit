@@ -1,61 +1,31 @@
 import React, { useState } from 'react';
 import { ShieldAlert, Zap, Activity, Scan, FileSearch, ArrowRight } from 'lucide-react';
+import { useData } from '../context/DataContext';
+
+const getTreatmentIcon = (iconType) => {
+  switch (iconType) {
+    case 'Zap': return <Zap size={24} />;
+    case 'Scan': return <Scan size={24} />;
+    case 'ShieldAlert': return <ShieldAlert size={24} />;
+    case 'FileSearch': return <FileSearch size={24} />;
+    case 'Activity':
+    default: return <Activity size={24} />;
+  }
+};
 
 export default function Treatments({ onOpenBookingModal }) {
   const [selectedCard, setSelectedCard] = useState(null);
+  const { treatments: contextTreatments } = useData();
 
-  const treatments = [
-    {
-      id: 'aneurysm',
-      title: 'Aneurysm Coiling / SAC / FD',
-      shortDesc: 'Advanced micro-coiling, Stent-Assisted Coiling (SAC), and Flow Diverter (FD) stenting to prevent & treat brain aneurysm ruptures.',
-      symptoms: ['Sudden, extremely severe headache ("thunderclap")', 'Double vision or dilated pupil', 'Pain behind or above one eye', 'Cranial nerve palsies'],
-      procedure: 'Endovascular Micro-Coiling & Flow Diversion',
-      details: 'Navigating specialized microcatheters into the cerebral aneurysm sac, ultra-soft platinum coils are deployed to seal the aneurysm. For wide-necked aneurysms, Stent-Assisted Coiling (SAC) or Flow Diverter (FD) stents are deployed to redirect arterial blood flow away from the bulge, promoting thrombosis without open brain surgery.',
-      color: '#06b6d4',
-      icon: <Activity size={24} />
-    },
-    {
-      id: 'thrombectomy',
-      title: 'Mechanical Thrombectomy in Brain Stroke',
-      shortDesc: 'Emergency endovascular procedure to physically extract blood clots from occluded brain arteries and prevent stroke disability.',
-      symptoms: ['Sudden weakness or numbness in face, arm, or leg', 'Sudden difficulty speaking or slurred speech', 'Loss of balance, severe dizziness, or confusion'],
-      procedure: 'Acute Mechanical Thrombectomy',
-      details: 'Using microcatheters inserted via femoral or radial access, a stent retriever or aspiration catheter is guided directly to the blocked cerebral artery under real-time fluoroscopy. The blood clot is captured and removed, instantly restoring vital blood flow to ischemic brain tissue.',
-      color: '#e11d48',
-      icon: <Zap size={24} />
-    },
-    {
-      id: 'dsa',
-      title: 'DSA / Angiography',
-      shortDesc: 'Gold-standard Diagnostic Digital Subtraction Angiography for micro-precise visualization of cerebral and spinal blood vessels.',
-      symptoms: ['Suspected arterial blockages or stenosis', 'Vascular malformation evaluation', 'Pre-surgical vascular mapping', 'Unexplained intracranial hemorrhage'],
-      procedure: 'Cerebral & Spinal Digital Subtraction Angiography',
-      details: 'DSA is the definitive gold standard for vascular diagnosis. A flexible catheter introduces radiopaque contrast dye into targeted head and neck arteries. High-definition 3D rotational imaging captures vessel architecture with sub-millimeter precision, pinpointing aneurysms, stenoses, and fistulas.',
-      color: '#10b981',
-      icon: <Scan size={24} />
-    },
-    {
-      id: 'avm',
-      title: 'AVM / DAVF Embolization',
-      shortDesc: 'Targeted endovascular occlusion of Arteriovenous Malformations (AVM) and Dural Arteriovenous Fistulas (DAVF) using liquid embolic agents.',
-      symptoms: ['Seizures or focal neurological deficits', 'Pulsatile tinnitus (whooshing noise in ears)', 'Chronic localized head or spinal pain', 'Sudden intracranial bleeding'],
-      procedure: 'Transcatheter Liquid Embolization (Onyx / Glue)',
-      details: 'AVMs and DAVFs are high-flow vascular short-circuits. Ultra-thin microcatheters are super-selectively navigated into feeding vessels to inject non-adhesive liquid embolic agents (such as Onyx, Squid, or Glue), effectively plugging the malformation nidus or fistulous connection.',
-      color: '#3b82f6',
-      icon: <ShieldAlert size={24} />
-    },
-    {
-      id: 'neuroreview',
-      title: 'Diagnostic Neuroimaging Consultation (Neuroreview)',
-      shortDesc: 'Subspecialty expert second opinion and comprehensive review of Brain/Spine MRI, CT, and vessel imaging scans.',
-      symptoms: ['Complex or inconclusive MRI/CT findings', 'Persistent unexplained neurological symptoms', 'Pre-treatment surgical evaluation', 'Second opinion request'],
-      procedure: 'Subspecialty Neuroimaging & Multi-Modality Scans Review',
-      details: 'Expert neuroradiological consultation analyzing high-resolution MRI sequences (DWI, PWI, MRA/MRV), CT angiograms, and diagnostic scans. Delivers precise diagnostic clarity, detailed report interpretations, and personalized treatment recommendations.',
-      color: '#8b5cf6',
-      icon: <FileSearch size={24} />
-    }
-  ];
+  const treatments = contextTreatments.map(t => ({
+    ...t,
+    shortDesc: t.shortDesc || t.description || '',
+    symptoms: t.symptoms || (t.features ? t.features : []),
+    procedure: t.procedure || t.category || 'Specialized Neuro Procedure',
+    details: t.details || t.description || '',
+    color: t.color || '#06b6d4',
+    icon: t.icon || getTreatmentIcon(t.iconType)
+  }));
 
   return (
     <section id="treatments" className="py-24 relative overflow-hidden" style={{

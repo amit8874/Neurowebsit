@@ -1,111 +1,23 @@
 import React, { useState } from 'react';
 import { ArrowLeft, X, Clock, AlertTriangle, ChevronRight } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 import strokeImg from '../assets/Patient-Stories/Brain-Stroke-100kb.jpeg';
 import aneurysmImg from '../assets/Patient-Stories/Brain aneurysm-100kb.jpeg';
-import avmImg from '../assets/Brain_AVM_415x374.webp';
-
-const storiesData = [
-  {
-    id: 'brain-stroke-18h',
-    category: 'Brain Stroke',
-    categoryTag: 'Emergency Thrombectomy',
-    badgeColor: '#e11d48',
-    title: '18 Hours After Stroke: When It Still Wasn’t Too Late',
-    subtitle: 'She came 18 hours after having a brain stroke...',
-    summary: 'A 56-year-old woman developed sudden right-sided paralysis and speech loss. Despite 18 hours passing, advanced MRI revealed salvageable brain tissue. Emergency mechanical thrombectomy restored her blood flow, leading to full recovery.',
-    image: strokeImg,
-    timeframe: '18 Hours Post-Stroke',
-    outcome: 'Full Functional Recovery',
-    sections: [
-      {
-        heading: 'A Sudden Stroke & Lost Hours',
-        content: `It had already been almost 18 hours since the stroke began. A 56-year-old woman suddenly developed weakness on the right side of her body and difficulty speaking. Like many stroke patients, her family first took her to different outpatient clinics and smaller hospitals. Tests were done, medicines were given, and precious time passed. By the time she reached our emergency department, nearly 18 hours had gone by. For a stroke, that can feel like an eternity.`
-      },
-      {
-        heading: 'Every Minute Matters—But Every Brain Is Different',
-        content: `As soon as she arrived, our CODE FAST stroke pathway was activated. She was immediately evaluated and underwent an MRI-based stroke assessment. The scan showed something important: a major artery supplying her brain was blocked by a blood clot. Part of her brain had already suffered irreversible injury. But, remarkably, a much larger area was still receiving reduced blood flow and was at risk of permanent damage. This distinction was crucial. Although many hours had passed, there was still potentially viable brain tissue that could be saved. So we decided to attempt an emergency mechanical thrombectomy.`
-      },
-      {
-        heading: 'Going After the Clot',
-        content: `The patient was taken directly to the catheterisation laboratory. Instead of opening the skull, we made a small puncture in the femoral artery in the groin and carefully guided a thin microcatheter through the blood vessels all the way up to the arteries of the brain. Angiography confirmed the blockage. We then used a stent retriever along with aspiration to engage and remove the clot. And then came the moment we were hoping for—the blocked artery opened. Blood flow was restored to the brain. The procedure was completed, and she was shifted to the ICU for close monitoring.`
-      },
-      {
-        heading: 'The Next Morning Brought an Unexpected Answer',
-        content: `How much of her brain could we save? The next morning brought an unexpected answer. The change was remarkable. The next day, she was speaking and moving her limbs. The woman who had arrived unable to speak properly and with significant weakness was already showing substantial recovery. Over the next couple of days, her improvement continued. By the time of discharge, she had no significant neurological deficit and was back to her normal activities.\n\nFor her family, it was difficult to believe how dramatically things had changed in just a few days.`
-      },
-      {
-        heading: 'What This Teaches Us About Stroke Care',
-        content: `This case highlights one of the most important advances in modern stroke treatment. In an acute ischemic stroke, a blood clot can suddenly block an artery supplying the brain. Without blood flow, brain tissue begins to get damaged. Mechanical thrombectomy allows us to physically remove that clot and restore blood flow.\n\nBut there is another important lesson: a patient who arrives late should not automatically be considered untreatable. Some patients continue to have a significant amount of salvageable brain tissue even many hours after their symptoms begin. Advanced brain imaging can help doctors identify these patients.`
-      }
-    ],
-    emergencyWarning: {
-      title: 'The Message Every Family Must Remember',
-      points: [
-        'Weakness or numbness of the face, arm, or leg—especially on one side',
-        'Difficulty speaking or understanding speech',
-        'Sudden loss of balance or coordination',
-        'Sudden severe neurological symptoms'
-      ],
-      note: 'Do not wait. Do not visit multiple clinics. Get the patient to a hospital capable of providing 24×7 stroke evaluation and mechanical thrombectomy immediately. Because in stroke, every minute means brain saved.'
-    }
-  },
-  {
-    id: 'brain-aneurysm-coiling',
-    category: 'Brain Aneurysm',
-    categoryTag: 'Keyhole Endovascular Coiling',
-    badgeColor: '#06b6d4',
-    title: 'Sudden Thunderclap Headache: Emergency Coiling Saved His Life',
-    subtitle: 'He had the worst headache of his life requiring urgent endovascular treatment...',
-    summary: 'A 48-year-old male suffered a sudden, unbearable thunderclap headache caused by a ruptured cerebral aneurysm. Through a groin catheter, ultra-soft platinum micro-coils sealed the aneurysm without opening the skull.',
-    image: aneurysmImg,
-    timeframe: 'Emergency Cath Lab Intervention',
-    outcome: 'Aneurysm Sealed Safely',
-    sections: [
-      {
-        heading: 'The Sudden Thunderclap',
-        content: `While at work, a 48-year-old man experienced an instantaneous, catastrophic headache that he described as "unlike anything ever felt before." Accompanying nausea and neck stiffness prompted immediate hospital transfer, where a 3D CT Angiogram identified a ruptured brain aneurysm at the anterior communicating artery.`
-      },
-      {
-        heading: 'Minimally Invasive Platinum Coiling',
-        content: `Rather than performing traditional open-skull craniotomy, Dr. Dewansh Mishra performed emergency endovascular coiling. A microcatheter navigated through the femoral artery into the brain's circulation. Detachable platinum coils were packed tightly inside the aneurysm dome, completely sealing it off from blood pressure.`
-      },
-      {
-        heading: 'Complete Recovery',
-        content: `The procedure successfully prevented re-bleeding. The patient recovered smoothly in the Neuro-ICU and was discharged within 5 days with zero neurological deficits.`
-      }
-    ]
-  },
-  {
-    id: 'brain-avm-embolization',
-    category: 'Brain AVM',
-    categoryTag: 'Liquid Embolization',
-    badgeColor: '#8b5cf6',
-    title: 'Unexpected ICU Emergency: Tackling a Complex Brain AVM',
-    subtitle: 'She never thought her regular coaching class would end up in ICU...',
-    summary: 'A young student collapsed during class due to a bleeding Arteriovenous Malformation (AVM). Targeted micro-catheter liquid embolization completely shut down the abnormal vessel tangle.',
-    image: avmImg,
-    timeframe: 'Multi-Stage Targeted Care',
-    outcome: 'Successful AVM Obliteration',
-    sections: [
-      {
-        heading: 'Sudden Collapse & Diagnosis',
-        content: `A 22-year-old student collapsed during her coaching class following a focal seizure. Emergency neuro-imaging revealed a Spetzler-Martin Grade II arteriovenous malformation (AVM) with early venous drainage in her left parietal lobe.`
-      },
-      {
-        heading: 'Precision Liquid Embolization',
-        content: `Using advanced biplane digital subtraction angiography (DSA), microcatheters super-selectively cannulated the AVM feeder arteries. Onyx liquid embolic agent was infused with sub-millimeter control, completely closing the malformation without open brain surgery.`
-      },
-      {
-        heading: 'Back to Studies & Normal Life',
-        content: `Post-procedure imaging confirmed total obliteration of the AVM nidus. She returned to her academic studies seizure-free and fully recovered.`
-      }
-    ]
-  }
-];
+import avmImg from '../assets/Brain_AVM.png';
 
 export default function PatientStories({ onBack, isPage = true, onOpenBookingModal }) {
   const [selectedStory, setSelectedStory] = useState(null);
+  const { patientStories: contextStories } = useData();
+
+  const storiesData = contextStories.map(s => ({
+    ...s,
+    badgeColor: s.badgeColor || '#06b6d4',
+    categoryTag: s.categoryTag || s.category || 'Patient Story',
+    sections: s.sections || [
+      { heading: 'Overview & Patient Journey', content: s.summary || s.subtitle || '' }
+    ]
+  }));
 
   return (
     <section
@@ -190,7 +102,7 @@ export default function PatientStories({ onBack, isPage = true, onOpenBookingMod
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '32px'
         }} className="patient-stories-grid">
-          
+
           {storiesData.map((story) => (
             <div
               key={story.id}

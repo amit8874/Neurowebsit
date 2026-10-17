@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, Mail, User } from 'lucide-react';
 import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
+import { useData } from '../context/DataContext';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -18,7 +19,9 @@ const loadRazorpayScript = () => {
 };
 
 export default function SecondOpinion({ onBack }) {
-  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review (₹600), 3: Success Confirmation
+  const { siteInfo } = useData();
+  const fee = siteInfo?.consultationFee || 500;
+  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review (₹500), 3: Success Confirmation
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -60,7 +63,7 @@ export default function SecondOpinion({ onBack }) {
 
     const emailPayload = {
       to_email: 'dewanshmishra@gmail.com',
-      subject: `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹600 Paid`,
+      subject: `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹${fee} Paid`,
       patient_name: submissionRecord.fullName,
       patient_phone: submissionRecord.phone,
       patient_email: submissionRecord.email || 'N/A',
@@ -69,7 +72,7 @@ export default function SecondOpinion({ onBack }) {
       attached_files_count: selectedFiles.length,
       attached_files_list: attachedFilesSummary,
       payment_id: submissionRecord.paymentId,
-      amount_paid: '₹600',
+      amount_paid: `₹${fee}`,
       submission_reference: submissionRecord.id,
       hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
     };
@@ -105,7 +108,7 @@ export default function SecondOpinion({ onBack }) {
 
     const options = {
       key: razorpayKey,
-      amount: 600 * 100, // ₹600 in paise
+      amount: fee * 100, // fee in paise (₹500 default)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
       description: "2nd Opinion Report Review Fee - Apollomedics",
@@ -122,7 +125,7 @@ export default function SecondOpinion({ onBack }) {
       notes: {
         condition: formData.condition || "2nd Opinion Review",
         hospital: "Apollomedics Super Speciality Hospital, Lucknow",
-        fee: "₹600"
+        fee: `₹${fee}`
       },
       theme: {
         color: "#06b6d4"
@@ -160,7 +163,7 @@ export default function SecondOpinion({ onBack }) {
       id: 'SO-' + Math.floor(100000 + Math.random() * 900000),
       ...formData,
       paymentId: paymentId,
-      feePaid: '₹600',
+      feePaid: `₹${fee}`,
       attachedFiles: selectedFiles.map(f => ({ name: f.name, size: (f.size / 1024 / 1024).toFixed(2) + ' MB' })),
       timestamp: new Date().toLocaleString()
     };
@@ -296,7 +299,7 @@ export default function SecondOpinion({ onBack }) {
                   backgroundColor: 'var(--bg-glass)',
                   border: '1px solid var(--border-color)'
                 }}>
-                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-teal)', margin: 0 }}>₹600</p>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-teal)', margin: 0 }}>₹{fee}</p>
                   <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Expert Case Review Fee</p>
                 </div>
 
@@ -691,7 +694,7 @@ export default function SecondOpinion({ onBack }) {
                       Call +91 092084 30808
                     </a>
                     <button type="submit" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
-                      Continue to Fee & Review (₹600)
+                      Continue to Fee & Review (₹{fee})
                     </button>
                   </div>
                 </div>
@@ -699,7 +702,7 @@ export default function SecondOpinion({ onBack }) {
               </form>
             ) : step === 2 ? (
 
-              /* ================= STEP 2: REVIEW DETAILS & RAZORPAY FEE (₹600) ================= */
+              /* ================= STEP 2: REVIEW DETAILS & RAZORPAY FEE (₹500) ================= */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
                   <div>
@@ -766,7 +769,7 @@ export default function SecondOpinion({ onBack }) {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>2nd Opinion Expert Review Fee</span>
-                    <span style={{ fontWeight: 800 }}>₹600</span>
+                    <span style={{ fontWeight: 800 }}>₹{fee}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
                     <span>Hospital Report Upload & Queue</span>
@@ -774,7 +777,7 @@ export default function SecondOpinion({ onBack }) {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(6, 182, 212, 0.25)', paddingTop: '10px', marginTop: '4px' }}>
                     <span style={{ fontWeight: 800, fontSize: '1.05rem' }}>Total Payable Amount</span>
-                    <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--accent-teal)' }}>₹600</span>
+                    <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--accent-teal)' }}>₹{fee}</span>
                   </div>
                 </div>
 
@@ -798,7 +801,7 @@ export default function SecondOpinion({ onBack }) {
                     Back
                   </button>
                   <button onClick={handleRazorpayPayment} className="btn btn-primary" style={{ flex: 1, padding: '12px', boxShadow: 'var(--shadow-glow)' }}>
-                    Proceed to Pay ₹600
+                    Proceed to Pay ₹{fee}
                   </button>
                 </div>
               </div>
@@ -824,7 +827,7 @@ export default function SecondOpinion({ onBack }) {
                     2nd Opinion Request Submitted & Paid!
                   </h3>
                   <p style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: 700, marginTop: '4px', margin: 0 }}>
-                    Payment Successful (₹600) • Ref: {confirmedSubmission?.id}
+                    Payment Successful ({confirmedSubmission?.feePaid || `₹${fee}`}) • Ref: {confirmedSubmission?.id}
                   </p>
                 </div>
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrainCircuit, Phone, MapPin, Clock, ArrowUp, X } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
-export default function Footer() {
+export default function Footer({ onOpenBookingModal, onOpenSecondOpinion, onOpenContactModal, onOpenAdmin }) {
+  const { siteInfo } = useData();
   const [activeModal, setActiveModal] = useState(null); // 'terms' | 'privacy' | null
   const currentYear = new Date().getFullYear();
 
@@ -96,7 +98,7 @@ export default function Footer() {
               }}>
                 <BrainCircuit size={20} />
               </div>
-              <span style={{ color: '#ffffff', fontWeight: 800 }}>Dr. Dewansh Mishra</span>
+              <span style={{ color: '#ffffff', fontWeight: 800 }}>{siteInfo.doctorName}</span>
             </a>
             
             <p style={{ color: '#cbd5e1', fontSize: '0.925rem', lineHeight: '1.6' }}>
@@ -150,14 +152,14 @@ export default function Footer() {
               <div className="flex" style={{ gap: '12px' }}>
                 <MapPin size={22} style={{ color: '#38bdf8', flexShrink: 0 }} />
                 <span style={{ color: '#cbd5e1', lineHeight: '1.5' }}>
-                  Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012
+                  {siteInfo.hospitalAddress}
                 </span>
               </div>
 
               <div className="flex" style={{ gap: '12px', alignItems: 'center' }}>
                 <Phone size={18} style={{ color: '#38bdf8', flexShrink: 0 }} />
-                <a href="tel:09208430808" style={{ fontWeight: 500, color: '#ffffff' }}>
-                  092084 30808
+                <a href={`tel:${siteInfo.phone?.replace(/\s+/g, '')}`} style={{ fontWeight: 500, color: '#ffffff' }}>
+                  {siteInfo.phone}
                 </a>
               </div>
 
@@ -197,14 +199,38 @@ export default function Footer() {
               Consultation Hours
             </h3>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.925rem', color: '#cbd5e1' }}>
-              <div className="flex" style={{ gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.9rem', color: '#cbd5e1' }}>
+              <div className="flex" style={{ gap: '10px' }}>
                 <Clock size={18} style={{ color: '#38bdf8', flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                  <p style={{ fontWeight: 600, color: '#ffffff' }}>Monday - Saturday</p>
-                  <p style={{ color: '#cbd5e1' }}>10:00 AM - 07:00 PM</p>
+                  <p style={{ fontWeight: 600, color: '#ffffff', margin: '0 0 2px 0' }}>
+                    🏥 Offline / In-Person OPD
+                  </p>
+                  <p style={{ color: '#38bdf8', fontWeight: 700, margin: '0 0 2px 0' }}>
+                    10:00 AM – 05:00 PM <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.8rem' }}>(Mon - Sat)</span>
+                  </p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>
+                    Apollomedics Super Speciality Hospital
+                  </p>
                 </div>
               </div>
+
+              <div className="flex" style={{ gap: '10px' }}>
+                <Clock size={18} style={{ color: '#34d399', flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <p style={{ fontWeight: 600, color: '#ffffff', margin: '0 0 2px 0' }}>
+                    💻 Online Teleconsultation
+                  </p>
+                  <p style={{ color: '#34d399', fontWeight: 700, margin: '0 0 2px 0' }}>
+                    11:00 AM – 07:00 PM <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.8rem' }}>(Mon - Sat)</span>
+                  </p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>
+                    Video Consultation & Scan Evaluation
+                  </p>
+                </div>
+              </div>
+
+
             </div>
           </div>
 
@@ -265,6 +291,22 @@ export default function Footer() {
                 }}
               >
                 Refund Policy
+              </button>
+              <span style={{ color: '#334155' }}>|</span>
+              <button
+                onClick={() => onOpenAdmin && onOpenAdmin()}
+                style={{
+                  background: 'rgba(6, 182, 212, 0.15)',
+                  border: '1px solid rgba(6, 182, 212, 0.3)',
+                  padding: '2px 10px',
+                  borderRadius: '6px',
+                  color: '#38bdf8',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  fontSize: '0.825rem'
+                }}
+              >
+                🔒 Doctor Portal
               </button>
             </div>
             <p style={{ lineHeight: '1.5', color: '#94a3b8' }}>

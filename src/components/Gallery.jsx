@@ -1,21 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, X, ChevronLeft, ChevronRight, ZoomIn, Play, Pause } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
-// Dynamically import all jpeg images from src/assets/gallary directory
-const galleryModules = import.meta.glob('../assets/gallary/*.jpeg', { eager: true, import: 'default' });
+export default function Gallery({ onBack, isPage = false, onOpenBookingModal }) {
+  const { galleryImages: contextGallery } = useData();
+  const galleryImages = contextGallery || [];
 
-const galleryImages = Object.keys(galleryModules).map((path, index) => {
-  const filename = path.split('/').pop();
-  return {
-    id: index + 1,
-    url: galleryModules[path],
-    title: `Clinical Photo ${index + 1}`,
-    filename: filename
-  };
-});
-
-export default function Gallery({ onBack, isPage = false }) {
+  // Triple array for seamless infinite looping
+  const displayImages = galleryImages.length > 0 ? [...galleryImages, ...galleryImages, ...galleryImages] : [];
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftState, setScrollLeftState] = useState(0);
+  const [dragMoved, setDragMoved] = useState(false);
+  const scrollRef = useRef(null);
+
+  // Auto-scroll loop
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // Initialize scroll position in the middle set of images
+    if (container.scrollLeft === 0) {
+      container.scrollLeft = container.scrollWidth / 3;
+    }
+
+    let animId;
+    const speed = 0.8; // Smooth slow continuous sliding speed
+
+    const step = () => {
+      if (!isHovered && !isDragging && !isPaused && container) {
+        container.scrollLeft += speed;
+        
+        // Loop back seamlessly when scrolling past middle boundary
+        const oneThird = container.scrollWidth / 3;
+        if (container.scrollLeft >= oneThird * 2) {
+          container.scrollLeft -= oneThird;
+        } else if (container.scrollLeft <= 0) {
+          container.scrollLeft += oneThird;
+        }
+      }
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [isHovered, isDragging, isPaused]);
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -48,6 +80,45 @@ export default function Gallery({ onBack, isPage = false }) {
     setLightboxIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
   };
 
+  // Drag handlers for mouse & touch
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragMoved(false);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeftState(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.8;
+    if (Math.abs(walk) > 5) {
+      setDragMoved(true);
+    }
+    scrollRef.current.scrollLeft = scrollLeftState - walk;
+  };
+
+  const scrollPrev = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollNext = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
   const activeMedia = lightboxIndex !== null ? galleryImages[lightboxIndex] : null;
 
   return (
@@ -56,8 +127,8 @@ export default function Gallery({ onBack, isPage = false }) {
       className="py-20 relative"
       style={{
         minHeight: isPage ? '100vh' : 'auto',
-        paddingTop: isPage ? 'calc(var(--navbar-height) + 20px)' : '80px',
-        paddingBottom: '80px',
+        paddingTop: isPage ? 'calc(var(--navbar-height) + 20px)' : '70px',
+        paddingBottom: '70px',
         backgroundColor: 'var(--bg-secondary)',
         borderBottom: '1px solid var(--border-color)',
         transition: 'background-color var(--transition-normal)',
@@ -70,7 +141,7 @@ export default function Gallery({ onBack, isPage = false }) {
       <div className="glow-blob glow-blob-blue" style={{ bottom: '10%', left: '5%', opacity: 0.12 }} />
       <div className="glow-blob glow-blob-teal" style={{ top: '10%', right: '5%', opacity: 0.12 }} />
 
-      <div className="container relative z-10">
+      <div className="container relative z-10" style={{ maxWidth: '1400px' }}>
 
         {/* Top Back Navigation Button (if opened as dedicated page) */}
         {isPage && onBack && (
@@ -95,9 +166,9 @@ export default function Gallery({ onBack, isPage = false }) {
         )}
 
         {/* Section Header */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '48px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '36px' }}>
           <span className="section-tag" style={{ marginBottom: '10px' }}>Clinical Media & Gallery</span>
-          <h2 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '12px' }}>
+          <h2 className="section-title" style={{ fontSize: '2.4rem', marginBottom: '12px' }}>
             Clinical Procedures & Diagnostic Gallery
           </h2>
           <p style={{
@@ -111,87 +182,191 @@ export default function Gallery({ onBack, isPage = false }) {
           </p>
         </div>
 
-        {/* Photo Gallery Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '24px'
-        }} className="gallery-photo-grid">
-          {galleryImages.map((item, index) => (
-            <div
-              key={item.id}
-              className="interactive-card gallery-photo-card"
-              onClick={() => openLightbox(index)}
+        {/* Carousel Container with Floating Controls */}
+        <div 
+          style={{ position: 'relative', width: '100%' }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => { setIsHovered(false); setIsDragging(false); }}
+        >
+          {/* Left Arrow Button */}
+          <button
+            onClick={scrollPrev}
+            aria-label="Previous gallery images"
+            style={{
+              position: 'absolute',
+              left: '-16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 30,
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              backgroundColor: '#0f172a',
+              border: '2px solid #06b6d4',
+              color: '#38bdf8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s ease'
+            }}
+            className="gallery-nav-btn"
+          >
+            <ChevronLeft size={24} />
+          </button>
+
+          {/* Right Arrow Button */}
+          <button
+            onClick={scrollNext}
+            aria-label="Next gallery images"
+            style={{
+              position: 'absolute',
+              right: '-16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 30,
+              width: '46px',
+              height: '46px',
+              borderRadius: '50%',
+              backgroundColor: '#0f172a',
+              border: '2px solid #06b6d4',
+              color: '#38bdf8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
+              transition: 'all 0.2s ease'
+            }}
+            className="gallery-nav-btn"
+          >
+            <ChevronRight size={24} />
+          </button>
+
+          {/* Auto-Slide Play/Pause Toggle Indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '12px'
+          }}>
+            <button
+              onClick={() => setIsPaused(!isPaused)}
               style={{
-                position: 'relative',
-                height: '240px',
-                borderRadius: 'var(--radius-lg)',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                backgroundColor: 'var(--bg-secondary)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '20px',
                 border: '1px solid var(--border-color)',
-                boxShadow: 'var(--shadow-md)'
+                backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                color: 'var(--text-secondary)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer'
               }}
             >
-              <img
-                src={item.url}
-                alt={item.title}
-                loading="lazy"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                  transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-                }}
-              />
+              {isPaused ? <Play size={14} color="#34d399" /> : <Pause size={14} color="#38bdf8" />}
+              {isPaused ? 'Resume Auto-Slide' : 'Pause Auto-Slide'}
+            </button>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              • Drag or swipe to scroll photos
+            </span>
+          </div>
 
-              {/* Hover Indicator */}
-              <div className="gallery-hover-overlay" style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: 'rgba(15, 23, 42, 0.45)',
-                backdropFilter: 'blur(3px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: 0,
-                transition: 'opacity var(--transition-fast)'
-              }}>
-                <div style={{
+          {/* Horizontally Scrollable Photo Track (4-5 Photos visible on desktop) */}
+          <div
+            ref={scrollRef}
+            className="gallery-track"
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            style={{
+              display: 'flex',
+              gap: '18px',
+              overflowX: 'auto',
+              scrollBehavior: isDragging ? 'auto' : 'smooth',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              padding: '12px 6px',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            {displayImages.map((item, index) => (
+              <div
+                key={`${item.id}-${index}`}
+                className="gallery-slide-card"
+                onClick={() => {
+                  if (!dragMoved) {
+                    openLightbox(index % galleryImages.length);
+                  }
+                }}
+              >
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  loading="lazy"
+                  draggable={false}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                />
+
+                {/* Hover Indicator Overlay */}
+                <div className="gallery-hover-overlay" style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: 'rgba(15, 23, 42, 0.5)',
+                  backdropFilter: 'blur(3px)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: 'rgba(6, 182, 212, 0.9)',
-                  color: '#ffffff',
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-full)',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  boxShadow: 'var(--shadow-lg)'
+                  justifyContent: 'center',
+                  opacity: 0,
+                  transition: 'opacity var(--transition-fast)'
                 }}>
-                  <ZoomIn size={16} />
-                  <span>Inspect Image</span>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: 'rgba(6, 182, 212, 0.95)',
+                    color: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: 'var(--radius-full)',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
+                  }}>
+                    <ZoomIn size={16} />
+                    <span>View Image</span>
+                  </div>
+                </div>
+
+                {/* Bottom Label Tag */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: 'linear-gradient(to top, rgba(7, 11, 20, 0.9) 0%, transparent 100%)',
+                  padding: '16px 14px 10px',
+                  color: '#ffffff',
+                  textAlign: 'left'
+                }}>
+                  <p style={{ fontSize: '0.825rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
+                    Clinical Photo #{item.id}
+                  </p>
                 </div>
               </div>
-
-              {/* Bottom Label Tag */}
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 100%)',
-                padding: '16px 14px 10px',
-                color: '#ffffff',
-                textAlign: 'left'
-              }}>
-                <p style={{ fontSize: '0.825rem', fontWeight: 700, margin: 0, color: '#ffffff' }}>
-                  Photo #{item.id}
-                </p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
       </div>
@@ -203,7 +378,7 @@ export default function Gallery({ onBack, isPage = false }) {
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(7, 10, 19, 0.92)',
+            backgroundColor: 'rgba(7, 10, 19, 0.94)',
             backdropFilter: 'blur(16px)',
             zIndex: 999999,
             display: 'flex',
@@ -340,27 +515,56 @@ export default function Gallery({ onBack, isPage = false }) {
         </div>
       )}
 
-      {/* Styled JSX for Hover Trigger & Responsive Grid */}
+      {/* Responsive Carousel Styling */}
       <style>{`
-        .gallery-photo-card:hover .gallery-hover-overlay {
+        .gallery-track::-webkit-scrollbar {
+          display: none !important;
+        }
+        .gallery-slide-card {
+          flex: 0 0 calc(20% - 14.4px); /* Displays 5 photos at a time on desktop! */
+          min-width: 220px;
+          height: 230px;
+          border-radius: var(--radius-lg);
+          position: relative;
+          overflow: hidden;
+          border: 1px solid var(--border-color);
+          background-color: var(--bg-secondary);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          user-select: none;
+        }
+        .gallery-slide-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(6, 182, 212, 0.25);
+          border-color: #06b6d4;
+        }
+        .gallery-slide-card:hover .gallery-hover-overlay {
           opacity: 1 !important;
         }
-        .gallery-photo-card:hover img {
-          transform: scale(1.06) !important;
+        .gallery-slide-card:hover img {
+          transform: scale(1.08) !important;
         }
-        @media (max-width: 1024px) {
-          .gallery-photo-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
+        .gallery-nav-btn:hover {
+          background-color: #06b6d4 !important;
+          color: #070b14 !important;
+          transform: translateY(-50%) scale(1.1) !important;
+        }
+        @media (max-width: 1280px) {
+          .gallery-slide-card {
+            flex: 0 0 calc(25% - 13.5px); /* 4 photos at a time */
           }
         }
-        @media (max-width: 768px) {
-          .gallery-photo-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
+        @media (max-width: 992px) {
+          .gallery-slide-card {
+            flex: 0 0 calc(33.333% - 12px); /* 3 photos at a time */
           }
         }
-        @media (max-width: 480px) {
-          .gallery-photo-grid {
-            grid-template-columns: 1fr !important;
+        @media (max-width: 640px) {
+          .gallery-slide-card {
+            flex: 0 0 calc(50% - 9px); /* 2 photos at a time on mobile */
+            height: 180px;
+          }
+          .gallery-nav-btn {
+            display: none !important;
           }
         }
       `}</style>

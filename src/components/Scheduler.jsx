@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarRange, Calendar, Clock, CheckCircle2, User, Phone, Mail, FileText, ChevronDown, Trash2, CreditCard, ArrowLeft } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -17,16 +18,26 @@ const loadRazorpayScript = () => {
 };
 
 export default function Scheduler() {
-  const [step, setStep] = useState(1); // 1: Input, 2: Fee Review (₹600), 3: Success
+  const { siteInfo } = useData();
+  const fee = siteInfo?.consultationFee || 500;
+  const [step, setStep] = useState(1); // 1: Input, 2: Fee Review (₹500), 3: Success
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
+    consultationMode: 'offline', // 'offline' (10 AM - 5 PM) or 'online' (11 AM - 7 PM)
     consultationType: 'aneurysm',
     date: '',
     timeSlot: 'morning',
     notes: ''
   });
+
+  const getTimeSlotLabel = (mode, slot) => {
+    if (mode === 'online') {
+      return slot === 'morning' ? 'Morning / Midday (11:00 AM - 02:00 PM)' : 'Afternoon / Evening (03:00 PM - 07:00 PM)';
+    }
+    return slot === 'morning' ? 'Morning OPD (10:00 AM - 01:00 PM)' : 'Afternoon OPD (02:00 PM - 05:00 PM)';
+  };
 
   const [isLoading, setIsLoading] = useState(false);
   const [submittedRequest, setSubmittedRequest] = useState(null);
@@ -79,16 +90,18 @@ export default function Scheduler() {
   const notifyDoctorViaEmail = async (bookingData) => {
     const emailPayload = {
       to_email: 'dewanshmishra@gmail.com',
-      subject: `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹600 Paid`,
+      subject: `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹${fee} Paid (${bookingData.consultationMode === 'online' ? 'Online Video' : 'Offline OPD'})`,
       patient_name: bookingData.name,
       patient_phone: bookingData.phone,
       patient_email: bookingData.email || 'N/A',
+      consultation_mode: bookingData.consultationMode === 'online' ? 'Online Video / Teleconsultation' : 'Offline In-Person OPD (Apollomedics Hospital)',
+      consultation_hours: bookingData.consultationMode === 'online' ? '11:00 AM - 07:00 PM' : '10:00 AM - 05:00 PM',
       consultation_specialization: getConsultLabel(bookingData.consultationType),
       appointment_date: bookingData.date,
-      time_slot: bookingData.timeSlot === 'morning' ? 'Morning (10:00 AM - 01:00 PM)' : 'Afternoon (02:00 PM - 07:00 PM)',
+      time_slot: getTimeSlotLabel(bookingData.consultationMode, bookingData.timeSlot),
       clinical_notes: bookingData.notes || 'None provided',
       payment_id: bookingData.paymentId,
-      amount_paid: '₹600',
+      amount_paid: `₹${fee}`,
       booking_reference: bookingData.id,
       hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
     };
@@ -125,7 +138,7 @@ export default function Scheduler() {
 
     const options = {
       key: razorpayKey, // Real Live Razorpay Key ID
-      amount: 600 * 100, // ₹600 in paise
+      amount: fee * 100, // fee in paise (₹500 default)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
       description: "Consultation Fee - Apollomedics Hospital",
@@ -142,7 +155,7 @@ export default function Scheduler() {
       notes: {
         specialization: getConsultLabel(formData.consultationType),
         hospital: "Apollomedics Super Speciality Hospital, Lucknow",
-        fee: "₹600"
+        fee: `₹${fee}`
       },
       theme: {
         color: "#06b6d4"
@@ -180,7 +193,7 @@ export default function Scheduler() {
       ...formData,
       consultationTypeLabel: getConsultLabel(formData.consultationType),
       paymentId: paymentId,
-      feePaid: '₹600',
+      feePaid: `₹${fee}`,
       status: 'Paid & Confirmed',
       timestamp: new Date().toLocaleString()
     };
@@ -397,6 +410,66 @@ export default function Scheduler() {
                   </div>
                 </div>
 
+                {/* Consultation Mode Selection */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: 600 }}>Consultation Mode & Hours *</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'offline', timeSlot: 'morning' }))}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: formData.consultationMode === 'offline' ? '2px solid var(--accent-teal)' : '1px solid var(--border-color)',
+                        backgroundColor: formData.consultationMode === 'offline' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(var(--primary-rgb), 0.02)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: formData.consultationMode === 'offline' ? 'var(--accent-teal)' : 'var(--text-primary)' }}>
+                        🏥 Offline / In-Person OPD
+                      </span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent-teal)' }}>
+                        Hours: 10:00 AM – 05:00 PM
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        Apollomedics Hospital, Lucknow
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'online', timeSlot: 'morning' }))}
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: formData.consultationMode === 'online' ? '2px solid #10b981' : '1px solid var(--border-color)',
+                        backgroundColor: formData.consultationMode === 'online' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(var(--primary-rgb), 0.02)',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: formData.consultationMode === 'online' ? '#10b981' : 'var(--text-primary)' }}>
+                        💻 Online Video Consult
+                      </span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#10b981' }}>
+                        Hours: 11:00 AM – 07:00 PM
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        Video Call & Scan Evaluation
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Date & Time block */}
                 <div className="grid grid-cols-2" style={{ gap: '16px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -424,7 +497,9 @@ export default function Scheduler() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label htmlFor="timeSlot" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Preferred Slot</label>
+                    <label htmlFor="timeSlot" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                      Preferred Slot ({formData.consultationMode === 'online' ? '11 AM - 7 PM' : '10 AM - 5 PM'})
+                    </label>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -451,8 +526,17 @@ export default function Scheduler() {
                           paddingRight: '20px'
                         }}
                       >
-                        <option value="morning">Morning (10:00 AM - 01:00 PM)</option>
-                        <option value="afternoon">Afternoon (02:00 PM - 07:00 PM)</option>
+                        {formData.consultationMode === 'online' ? (
+                          <>
+                            <option value="morning">Morning / Midday (11:00 AM - 02:00 PM)</option>
+                            <option value="afternoon">Afternoon / Evening (03:00 PM - 07:00 PM)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="morning">Morning OPD (10:00 AM - 01:00 PM)</option>
+                            <option value="afternoon">Afternoon OPD (02:00 PM - 05:00 PM)</option>
+                          </>
+                        )}
                       </select>
                       <ChevronDown size={16} style={{ position: 'absolute', right: '16px', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                     </div>
@@ -484,7 +568,7 @@ export default function Scheduler() {
                 </div>
 
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '8px', boxShadow: 'var(--shadow-glow)' }}>
-                  Continue to Fee & Review (₹600)
+                  Continue to Fee & Review (₹{fee})
                 </button>
               </form>
             ) : step === 2 ? (
@@ -528,8 +612,16 @@ export default function Scheduler() {
                   <p style={{ margin: 0 }}><strong>Patient Name:</strong> {formData.name}</p>
                   <p style={{ margin: 0 }}><strong>Phone Number:</strong> {formData.phone}</p>
                   <p style={{ margin: 0 }}><strong>Email Address:</strong> {formData.email || 'N/A'}</p>
+                  <p style={{ margin: 0 }}>
+                    <strong>Consultation Mode:</strong>{' '}
+                    <span style={{ color: formData.consultationMode === 'online' ? '#10b981' : 'var(--accent-teal)', fontWeight: 700 }}>
+                      {formData.consultationMode === 'online' ? '💻 Online Video (11:00 AM – 07:00 PM)' : '🏥 Offline In-Person OPD (10:00 AM – 05:00 PM)'}
+                    </span>
+                  </p>
                   <p style={{ margin: 0 }}><strong>Specialization:</strong> {getConsultLabel(formData.consultationType)}</p>
-                  <p style={{ margin: 0 }}><strong>Appointment Date:</strong> {formData.date} ({formData.timeSlot === 'morning' ? 'Morning Slot' : 'Afternoon Slot'})</p>
+                  <p style={{ margin: 0 }}>
+                    <strong>Appointment Slot:</strong> {formData.date} • {getTimeSlotLabel(formData.consultationMode, formData.timeSlot)}
+                  </p>
                 </div>
 
                 {/* Doctor Fee Breakdown */}
@@ -544,7 +636,7 @@ export default function Scheduler() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Doctor Consultation Fee</span>
-                    <span style={{ fontWeight: 800 }}>₹600</span>
+                    <span style={{ fontWeight: 800 }}>₹{fee}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
                     <span>Hospital Appointment Queue</span>
@@ -552,7 +644,7 @@ export default function Scheduler() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(6, 182, 212, 0.25)', paddingTop: '10px', marginTop: '4px' }}>
                     <span style={{ fontWeight: 800, fontSize: '1.05rem' }}>Total Payable Amount</span>
-                    <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--accent-teal)' }}>₹600</span>
+                    <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--accent-teal)' }}>₹{fee}</span>
                   </div>
                 </div>
 
@@ -576,7 +668,7 @@ export default function Scheduler() {
                     Back
                   </button>
                   <button onClick={handleRazorpayPayment} className="btn btn-primary" style={{ flex: 1, padding: '12px', boxShadow: 'var(--shadow-glow)' }}>
-                    Proceed to Pay ₹600
+                    Proceed to Pay ₹{fee}
                   </button>
                 </div>
               </div>
@@ -605,9 +697,15 @@ export default function Scheduler() {
                   <p><strong>Razorpay Payment ID:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--accent-teal)', fontWeight: 700 }}>{submittedRequest?.paymentId}</span></p>
                   <p><strong>Patient Name:</strong> {submittedRequest?.name}</p>
                   <p><strong>Contact Phone:</strong> {submittedRequest?.phone}</p>
+                  <p>
+                    <strong>Consultation Mode:</strong>{' '}
+                    <span style={{ color: submittedRequest?.consultationMode === 'online' ? '#10b981' : 'var(--accent-teal)', fontWeight: 700 }}>
+                      {submittedRequest?.consultationMode === 'online' ? '💻 Online Video (11:00 AM – 07:00 PM)' : '🏥 Offline In-Person OPD (10:00 AM – 05:00 PM)'}
+                    </span>
+                  </p>
                   <p><strong>Specialization:</strong> {submittedRequest?.consultationTypeLabel}</p>
-                  <p><strong>Target Date:</strong> {submittedRequest?.date} ({submittedRequest?.timeSlot === 'morning' ? 'Morning Slot' : 'Afternoon Slot'})</p>
-                  <p><strong>Fee Paid:</strong> ₹600</p>
+                  <p><strong>Appointment Slot:</strong> {submittedRequest?.date} • {getTimeSlotLabel(submittedRequest?.consultationMode, submittedRequest?.timeSlot)}</p>
+                  <p><strong>Fee Paid:</strong> {submittedRequest?.feePaid || `₹${fee}`}</p>
                 </div>
 
                 <div style={{
@@ -634,11 +732,20 @@ export default function Scheduler() {
             <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Hospital Guidelines</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
+              <div style={{ padding: '14px', borderRadius: 'var(--radius-sm)', backgroundColor: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+                <p style={{ fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>Consultation Schedule</p>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem' }}>
+                  🏥 <strong>Offline (In-Person OPD):</strong> 10:00 AM – 05:00 PM (Mon – Sat)
+                </p>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                  💻 <strong>Online (Video Consult):</strong> 11:00 AM – 07:00 PM (Mon – Sat)
+                </p>
+              </div>
               <p>
                 <strong>1. Emergency Referrals:</strong> If experiencing acute stroke symptoms (facial drooping, arm weakness, speech slurring), bypass form and proceed to **Apollomedics Hospital Emergency Department** immediately.
               </p>
               <p>
-                <strong>2. Doctor Fee:</strong> Consultation fee is ₹600 payable via secure Razorpay checkout (UPI, Cards, NetBanking).
+                <strong>2. Doctor Fee:</strong> Consultation fee is ₹{fee} payable via secure Razorpay checkout (UPI, Cards, NetBanking).
               </p>
               <p>
                 <strong>3. Email Notification:</strong> Upon payment, Dr. Dewansh Mishra receives instant email notification at dewanshmishra@gmail.com with your appointment schedule.
@@ -674,7 +781,7 @@ export default function Scheduler() {
                           {booking.consultationTypeLabel || getConsultLabel(booking.consultationType)}
                         </p>
                         <p style={{ fontSize: '0.8rem', color: 'var(--accent-teal)', marginTop: '4px', fontWeight: 500 }}>
-                          Paid: ₹600 • Date: {booking.date} ({booking.timeSlot === 'morning' ? 'Morning' : 'Afternoon'})
+                          Paid: {booking.feePaid || `₹${fee}`} • Date: {booking.date} ({booking.timeSlot === 'morning' ? 'Morning' : 'Afternoon'})
                         </p>
                       </div>
                       

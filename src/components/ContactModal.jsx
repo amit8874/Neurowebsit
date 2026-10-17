@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { Phone, Mail, MapPin, X, ExternalLink, Navigation } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 export default function ContactModal({ isOpen, onClose }) {
+  const { siteInfo } = useData();
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -20,7 +23,7 @@ export default function ContactModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const mapSearchQuery = encodeURIComponent("Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012");
+  const mapSearchQuery = encodeURIComponent(siteInfo.hospitalAddress || "Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012");
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
   const embedMapUrl = `https://maps.google.com/maps?q=${mapSearchQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
@@ -110,7 +113,7 @@ export default function ContactModal({ isOpen, onClose }) {
 
           {/* Phone Item */}
           <a
-            href="tel:09208430808"
+            href={`tel:${siteInfo.phone?.replace(/\s+/g, '')}`}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -149,14 +152,14 @@ export default function ContactModal({ isOpen, onClose }) {
                 Phone
               </span>
               <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                092084 30808
+                {siteInfo.phone}
               </span>
             </div>
           </a>
 
           {/* Email Item */}
           <a
-            href="mailto:dewanshmishra@gmail.com"
+            href={`mailto:${siteInfo.email}`}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -195,7 +198,7 @@ export default function ContactModal({ isOpen, onClose }) {
                 Email
               </span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
-                dewanshmishra@gmail.com
+                {siteInfo.email}
               </span>
             </div>
           </a>
@@ -228,10 +231,10 @@ export default function ContactModal({ isOpen, onClose }) {
             </div>
             <div>
               <span style={{ fontSize: '0.725rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Hospital Location (Lucknow)
+                Hospital Location ({siteInfo.city || 'Lucknow'})
               </span>
               <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: '1.4', display: 'block', marginTop: '2px' }}>
-                Apollomedics Super Speciality Hospital, KBC-31, Sector B, LDA Colony, Kanpur - Lucknow Rd, Lucknow, Uttar Pradesh 226012
+                {siteInfo.hospitalAddress}
               </span>
             </div>
           </div>

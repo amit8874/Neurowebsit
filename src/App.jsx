@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DataProvider, useData } from './context/DataContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import WhatIsINR from './components/WhatIsINR';
@@ -13,10 +14,14 @@ import Blog from './components/Blog';
 import SecondOpinion from './components/SecondOpinion';
 import BookingModal from './components/BookingModal';
 import ContactModal from './components/ContactModal';
+import CustomSections from './components/CustomSections';
+import AdminLogin from './components/AdminLogin';
+import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
 import './App.css';
 
-function App() {
+function MainApp() {
+  const { isAdminLoggedIn } = useData();
   const [view, setView] = useState('home');
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -24,6 +29,10 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
+      if (hash === '#admin') {
+        setView('admin');
+        return;
+      }
       if (hash === '#booking') {
         setIsBookingModalOpen(true);
         return;
@@ -93,11 +102,38 @@ function App() {
     setIsContactModalOpen(true);
   };
 
+  // Open CMS in a NEW TAB
+  const handleOpenAdmin = () => {
+    window.open('/#admin', '_blank');
+  };
+
   const handleBackToHome = () => {
     window.location.hash = '';
     setView('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Dedicated Admin Route handling
+  if (view === 'admin' || window.location.hash === '#admin') {
+    if (isAdminLoggedIn) {
+      return (
+        <AdminPanel
+          onClose={() => {
+            window.location.hash = '';
+            setView('home');
+          }}
+        />
+      );
+    }
+    return (
+      <AdminLogin
+        isStandalone={true}
+        onLoginSuccess={() => {
+          setView('admin');
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{
@@ -129,6 +165,7 @@ function App() {
         onOpenBlog={handleOpenBlog}
         onOpenBookingModal={handleOpenBookingModal}
         onOpenContactModal={handleOpenContactModal}
+        onOpenAdmin={handleOpenAdmin}
         onBackHome={handleBackToHome}
         isSecondOpinion={view === 'second-opinion'}
         isGallery={view === 'gallery'}
@@ -148,17 +185,24 @@ function App() {
         ) : (
           <>
             <Hero onOpenSecondOpinion={handleOpenSecondOpinion} onOpenBookingModal={handleOpenBookingModal} />
+            <CustomSections />
             <WhatIsINR onOpenBookingModal={handleOpenBookingModal} />
             <ScanOpinionEstimator onOpenBookingModal={handleOpenBookingModal} />
             <ConditionsTreated onOpenBookingModal={handleOpenBookingModal} />
             <SymptomsWarning onOpenBookingModal={handleOpenBookingModal} />
             <About onOpenBookingModal={handleOpenBookingModal} />
+            <Gallery onOpenBookingModal={handleOpenBookingModal} />
             <Testimonials />
           </>
         )}
       </main>
 
-      <Footer onOpenBookingModal={handleOpenBookingModal} onOpenSecondOpinion={handleOpenSecondOpinion} onOpenContactModal={handleOpenContactModal} />
+      <Footer
+        onOpenBookingModal={handleOpenBookingModal}
+        onOpenSecondOpinion={handleOpenSecondOpinion}
+        onOpenContactModal={handleOpenContactModal}
+        onOpenAdmin={handleOpenAdmin}
+      />
 
       {/* Global Smart Booking Pop-Up Modal */}
       <BookingModal
@@ -175,4 +219,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <DataProvider>
+      <MainApp />
+    </DataProvider>
+  );
+}
