@@ -432,7 +432,31 @@ const INITIAL_CUSTOM_SECTIONS = [
 ];
 
 export function DataProvider({ children }) {
+  // ─── DATA VERSION CACHE BUSTER ───────────────────────────────────────────
+  // Change this version string any time you push new initial data to production.
+  // On mismatch, all old localStorage is cleared → fresh initial data loads.
+  const DATA_VERSION = 'v3';
+  const storedVersion = localStorage.getItem('dewansh_data_version');
+  if (storedVersion !== DATA_VERSION) {
+    // Clear all old cached data keys
+    [
+      'dewansh_site_info',
+      'dewansh_hero_slides',
+      'dewansh_treatments',
+      'dewansh_testimonials',
+      'dewansh_testimonials_v2',
+      'dewansh_patient_stories',
+      'dewansh_blogs',
+      'dewansh_custom_sections',
+      'dewansh_gallery_images'
+    ].forEach(key => localStorage.removeItem(key));
+    // Stamp the new version
+    localStorage.setItem('dewansh_data_version', DATA_VERSION);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Load state from localStorage or use initial defaults
+
   const [siteInfo, setSiteInfo] = useState(() => {
     const saved = localStorage.getItem('dewansh_site_info');
     if (saved) {
