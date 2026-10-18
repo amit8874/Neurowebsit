@@ -24,7 +24,7 @@ const INITIAL_GALLERY_IMAGES = Object.keys(galleryModules).map((path, index) => 
 
 // ─── Backend API Helpers ─────────────────────────────────────────────────────
 // Changes made from Admin Panel are saved here so ALL devices see the same data
-const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
+import { API_BASE } from '../utils/apiConfig';
 
 /**
  * Save a data section to the backend server (fire-and-forget with graceful fallback).
@@ -566,16 +566,15 @@ export function DataProvider({ children }) {
   useEffect(() => {
     apiFetchAll().then(backendData => {
       if (!backendData) return; // Backend offline – keep localStorage data
-      // Only override state if the backend has saved data for that key
       if (backendData.siteInfo) setSiteInfo(prev => ({ ...prev, ...backendData.siteInfo }));
-      if (backendData.heroSlides) setHeroSlides(backendData.heroSlides);
-      if (backendData.treatments) setTreatments(backendData.treatments);
-      if (backendData.testimonials) setTestimonials(backendData.testimonials);
-      if (backendData.patientStories) setPatientStories(backendData.patientStories);
-      if (backendData.blogs) setBlogs(backendData.blogs);
-      if (backendData.customSections) setCustomSections(backendData.customSections);
-      if (backendData.galleryImages) setGalleryImages(backendData.galleryImages);
-      console.log('[CMS] ✅ Data loaded from backend server');
+      if (Array.isArray(backendData.heroSlides)) setHeroSlides(backendData.heroSlides);
+      if (Array.isArray(backendData.treatments)) setTreatments(backendData.treatments);
+      if (Array.isArray(backendData.testimonials)) setTestimonials(backendData.testimonials);
+      if (Array.isArray(backendData.patientStories)) setPatientStories(backendData.patientStories);
+      if (Array.isArray(backendData.blogs)) setBlogs(backendData.blogs);
+      if (Array.isArray(backendData.customSections)) setCustomSections(backendData.customSections);
+      if (Array.isArray(backendData.galleryImages)) setGalleryImages(backendData.galleryImages);
+      console.log('[CMS] ✅ Data loaded from backend server. Banners count:', backendData.heroSlides?.length ?? 'none');
     });
   }, []); // Runs once on mount
   // ─────────────────────────────────────────────────────────────────────────────

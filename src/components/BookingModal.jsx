@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CalendarRange, User, Phone, Mail, Calendar, Clock, FileText, Upload, CheckCircle2, Send, Sparkles, ShieldCheck, ArrowLeft, CreditCard, Check } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { sendDoctorEmail } from '../utils/emailService';
+import { API_BASE } from '../utils/apiConfig';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -65,7 +66,6 @@ export default function BookingModal({ isOpen, onClose }) {
     const local = JSON.parse(localStorage.getItem('dewansh_bookings') || '[]');
     setAllBookings(local);
 
-    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
     fetch(`${API_BASE}/api/bookings`)
       .then(res => res.json())
       .then(json => {
@@ -284,7 +284,6 @@ Please follow up with the patient at your earliest convenience.`;
     setAllBookings(prev => [bookingRecord, ...prev]);
 
     // Save to MongoDB backend /api/bookings
-    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
     fetch(`${API_BASE}/api/bookings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

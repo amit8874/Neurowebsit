@@ -3,7 +3,9 @@
 // The backend runs on http://localhost:3001 (or VITE_EMAIL_SERVER_URL in .env)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const EMAIL_API_URL = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
+import { API_BASE } from './apiConfig';
+
+const EMAIL_API_URL = API_BASE;
 
 /**
  * Send an email directly to the doctor's Gmail via Nodemailer backend.

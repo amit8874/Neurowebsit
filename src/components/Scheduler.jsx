@@ -19,6 +19,7 @@ const loadRazorpayScript = () => {
 };
 
 import { OFFLINE_SLOTS, ONLINE_SLOTS } from './BookingModal';
+import { API_BASE } from '../utils/apiConfig';
 
 export default function Scheduler() {
   const { siteInfo } = useData();
@@ -57,7 +58,6 @@ export default function Scheduler() {
     const local = saved ? JSON.parse(saved) : [];
     setExistingBookings(local);
 
-    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
     fetch(`${API_BASE}/api/bookings`)
       .then(res => res.json())
       .then(json => {
@@ -243,7 +243,6 @@ Please follow up with the patient at your earliest convenience.`;
     localStorage.setItem('dewansh_bookings', JSON.stringify(updatedBookings));
 
     // Save to MongoDB backend /api/bookings
-    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
     fetch(`${API_BASE}/api/bookings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

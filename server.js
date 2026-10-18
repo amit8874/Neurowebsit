@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = process.env.EMAIL_SERVER_PORT || 3001;
+const PORT = process.env.PORT || process.env.EMAIL_SERVER_PORT || 3001;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  MONGODB CONNECTION
@@ -90,6 +90,13 @@ const upload = multer({
 
 // ─── Express Setup ─────────────────────────────────────────────────────────────
 const app = express();
+// Normalize duplicate leading slashes (e.g. //api/data -> /api/data)
+app.use((req, res, next) => {
+  if (req.url.startsWith('//')) {
+    req.url = req.url.replace(/^\/+/, '/');
+  }
+  next();
+});
 app.use(cors());
 // Support large base64 image payloads (legacy fallback — still kept for compatibility)
 app.use(express.json({ limit: '50mb' }));
