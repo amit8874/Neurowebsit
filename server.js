@@ -60,7 +60,7 @@ async function writeData(key, data) {
   await CmsData.findOneAndUpdate(
     { key },
     { key, data, updatedAt: new Date() },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 }
 
@@ -102,8 +102,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ─── Nodemailer Transporter ────────────────────────────────────────────────────
-// Uses Gmail SMTP with App Password (NOT regular Gmail password)
+// ─── Email Dispatcher (Resend HTTP API with Nodemailer fallback) ───────────────
+// Uses Gmail SMTP for local fallback, or Resend HTTP REST API on Render free tier (port 443)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   pool: true,
@@ -114,13 +114,59 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-transporter.verify((error) => {
-  if (error) {
-    console.error('❌ Nodemailer connection failed:', error.message);
-  } else {
-    console.log('✅ Nodemailer ready — Gmail SMTP connected');
+if (process.env.RESEND_API_KEY) {
+  console.log('✅ Email Service: Resend HTTP API ready (Port 443 — Render Free Tier compatible)');
+} else if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  transporter.verify((error) => {
+    if (error) {
+      console.warn('⚠️ Nodemailer SMTP connection failed (normal on Render free tier):', error.message);
+    } else {
+      console.log('✅ Nodemailer ready — Gmail SMTP connected');
+    }
+  });
+} else {
+  console.log('ℹ️  Email Service: Set RESEND_API_KEY in .env to enable email sending');
+}
+
+/**
+ * Universal Email Sender:
+ * 1. If RESEND_API_KEY is configured, sends via Resend HTTP API (Port 443 - never blocked by cloud firewalls).
+ * 2. Otherwise falls back to Nodemailer SMTP.
+ */
+async function dispatchEmail({ from, to, replyTo, subject, text, html }) {
+  const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+
+  if (resendApiKey) {
+    const resendFrom = from || process.env.RESEND_FROM_EMAIL || 'Dr. Dewansh Mishra <onboarding@resend.dev>';
+    const recipients = Array.isArray(to) ? to : [to];
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: resendFrom,
+        to: recipients,
+        reply_to: replyTo,
+        subject,
+        text,
+        html
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `Resend API HTTP ${response.status}`);
+    }
+    return { success: true, messageId: data.id, provider: 'Resend HTTP API' };
   }
-});
+
+  // Fallback to Nodemailer
+  const info = await transporter.sendMail({ from, to, replyTo, subject, text, html });
+  return { success: true, messageId: info.messageId, provider: 'Nodemailer SMTP' };
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  IMAGE UPLOAD API (Cloudinary)
@@ -256,13 +302,17 @@ app.post('/api/send-email', async (req, res) => {
   }
 
   const senderUser = (process.env.GMAIL_USER || '').trim();
-  const doctorTarget = (process.env.DOCTOR_EMAIL || senderUser).trim();
+  const doctorTarget = (process.env.DOCTOR_EMAIL || senderUser || 'dewanshmishra@gmail.com').trim();
   const validReplyTo = patientEmail && typeof patientEmail === 'string' && patientEmail.includes('@')
     ? patientEmail.trim()
-    : senderUser;
+    : (senderUser || undefined);
+
+  const doctorFrom = process.env.RESEND_API_KEY
+    ? (process.env.RESEND_FROM_EMAIL || 'Dr. Dewansh Website <onboarding@resend.dev>')
+    : `"Dr. Dewansh Website" <${senderUser}>`;
 
   const mailOptions = {
-    from: `"Dr. Dewansh Website" <${senderUser}>`,
+    from: doctorFrom,
     to: doctorTarget,
     replyTo: validReplyTo,
     subject: subjectLine,
@@ -300,8 +350,8 @@ app.post('/api/send-email', async (req, res) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent successfully to Doctor! Message ID: ${info.messageId}`);
+    const info = await dispatchEmail(mailOptions);
+    console.log(`✅ Email sent successfully to Doctor via ${info.provider}! Message ID: ${info.messageId}`);
     console.log(`   To     : ${doctorTarget}`);
     console.log(`   Subject: ${subjectLine}\n`);
 
@@ -320,8 +370,12 @@ app.post('/api/send-email', async (req, res) => {
         ? `Confirmed (${bookingDetails.feePaid || '₹500'}) • Ref: ${bookingDetails.paymentId}`
         : 'Confirmed (₹500)';
 
+      const patientFrom = process.env.RESEND_API_KEY
+        ? (process.env.RESEND_FROM_EMAIL || 'Dr. Dewansh Mishra <onboarding@resend.dev>')
+        : `"Dr. Dewansh Mishra" <${senderUser}>`;
+
       const patientMailOptions = {
-        from: `"Dr. Dewansh Mishra" <${senderUser}>`,
+        from: patientFrom,
         to: patientRecipient,
         subject: `Appointment Confirmed: Dr. Dewansh Mishra (Ref: ${bookingId})`,
         text: `Dear ${patientName},\n\nThank you for scheduling your consultation with Dr. Dewansh Mishra. Your appointment request and consultation fee payment have been successfully confirmed.\n\nAPPOINTMENT SUMMARY:\n- Patient Name   : ${patientName}\n- Phone Number   : ${patientPhone}\n- Consultation   : ${modeLabel}\n- Specialization : ${specialization}\n- Date & Slot    : ${dateSlot}\n- Booking Ref ID : ${bookingId}\n- Payment Status : ${paymentInfo}\n\nNEXT STEPS:\n- Dr. Dewansh Mishra and the clinical team have received your booking details and will contact you directly on your phone (${patientPhone}) shortly.\n- If you have previous MRI, CT, or angiography scans/reports, please keep them ready to share during your consultation.\n\nWarm regards,\nDr. Dewansh Mishra\nBrain & Spine Vascular Specialist\nDM Neuroradiology (SCTIMST), MD, MBBS`,
@@ -390,8 +444,8 @@ app.post('/api/send-email', async (req, res) => {
       };
 
       try {
-        const patientInfo = await transporter.sendMail(patientMailOptions);
-        console.log(`✅ Confirmation email sent to patient: ${patientInfo.messageId} | To: ${patientRecipient}\n`);
+        const patientInfo = await dispatchEmail(patientMailOptions);
+        console.log(`✅ Confirmation email sent to patient via ${patientInfo.provider}: ${patientInfo.messageId} | To: ${patientRecipient}\n`);
       } catch (patientErr) {
         console.warn('⚠️ Could not send confirmation to patient email:', patientErr?.message || patientErr);
       }
@@ -415,12 +469,17 @@ app.get('/api/health', async (_, res) => {
     savedKeys = docs.map(d => d.key);
   } catch (_) {}
 
+  const emailProvider = process.env.RESEND_API_KEY
+    ? 'Resend HTTP API (Port 443 — Render Free Tier compatible)'
+    : (process.env.GMAIL_USER ? 'Nodemailer Gmail SMTP' : 'Not configured');
+
   res.json({
     status: 'ok',
     server: 'Dr. Dewansh CMS + Email Server',
     port: PORT,
     mongodb: mongoStatus,
     cloudinary: process.env.CLOUDINARY_CLOUD_NAME ? `connected (${process.env.CLOUDINARY_CLOUD_NAME})` : 'not configured',
+    emailService: emailProvider,
     savedKeys
   });
 });
@@ -439,9 +498,13 @@ if (existsSync(distDir)) {
 
 // ─── Start Server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
+  const emailStatus = process.env.RESEND_API_KEY
+    ? '✅ Resend HTTP API (Port 443 — Free Tier OK)'
+    : (process.env.GMAIL_USER ? '⚠️  Gmail SMTP (May timeout on Render Free Tier)' : '⚠️  Not configured in .env');
+
   console.log(`\n🚀 CMS + Email Server running on http://localhost:${PORT}`);
-  console.log(`   Gmail User  : ${process.env.GMAIL_USER || '⚠️  Not set in .env'}`);
-  console.log(`   Doctor Email: ${process.env.DOCTOR_EMAIL || process.env.GMAIL_USER || '⚠️  Not set in .env'}`);
-  console.log(`   MongoDB     : ${process.env.MONGODB_URI ? '✅ URI configured' : '⚠️  Not set in .env'}`);
-  console.log(`   Cloudinary  : ${process.env.CLOUDINARY_CLOUD_NAME ? `✅ ${process.env.CLOUDINARY_CLOUD_NAME}` : '⚠️  Not set in .env'}\n`);
+  console.log(`   Email Service: ${emailStatus}`);
+  console.log(`   Doctor Email : ${process.env.DOCTOR_EMAIL || process.env.GMAIL_USER || 'dewanshmishra@gmail.com'}`);
+  console.log(`   MongoDB      : ${process.env.MONGODB_URI ? '✅ URI configured' : '⚠️  Not set in .env'}`);
+  console.log(`   Cloudinary   : ${process.env.CLOUDINARY_CLOUD_NAME ? `✅ ${process.env.CLOUDINARY_CLOUD_NAME}` : '⚠️  Not set in .env'}\n`);
 });
