@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Star, Activity, Zap, ShieldAlert, Scan, FileSearch, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { useData } from '../context/DataContext';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
+import drDewanshImg from '../assets/dr.dewan.jpeg';
 import banner1Img from '../assets/banner1-.jpeg';
 import banner2Img from '../assets/banner2-.jpeg';
 import banner3Img from '../assets/banner3.jpeg';

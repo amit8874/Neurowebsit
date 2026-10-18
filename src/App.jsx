@@ -185,7 +185,6 @@ function MainApp() {
         ) : (
           <>
             <Hero onOpenSecondOpinion={handleOpenSecondOpinion} onOpenBookingModal={handleOpenBookingModal} />
-            <CustomSections />
             <WhatIsINR onOpenBookingModal={handleOpenBookingModal} />
             <ScanOpinionEstimator onOpenBookingModal={handleOpenBookingModal} />
             <ConditionsTreated onOpenBookingModal={handleOpenBookingModal} />

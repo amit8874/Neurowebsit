@@ -23,3 +23,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CMS data directory (server-side JSON persistence — do NOT commit)
+# This is the database for admin panel changes. Back it up separately.
+data/

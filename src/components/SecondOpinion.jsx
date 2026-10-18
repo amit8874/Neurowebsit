@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, Mail, User } from 'lucide-react';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
+import drDewanshImg from '../assets/dr.dewan.jpeg';
 import { useData } from '../context/DataContext';
+import { sendDoctorEmail } from '../utils/emailService';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -20,8 +21,8 @@ const loadRazorpayScript = () => {
 
 export default function SecondOpinion({ onBack }) {
   const { siteInfo } = useData();
-  const fee = siteInfo?.consultationFee || 500;
-  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review (₹500), 3: Success Confirmation
+  const fee = siteInfo?.consultationFee ?? 1;
+  const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review, 3: Success Confirmation
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -55,37 +56,36 @@ export default function SecondOpinion({ onBack }) {
     setStep(2);
   };
 
-  // Dispatch Email Notification to Doctor (dewanshmishra@gmail.com) with attached file details
+  // Dispatch Email Notification to Doctor via EmailJS (direct to Gmail)
   const notifyDoctorViaEmail = async (submissionRecord) => {
     const attachedFilesSummary = selectedFiles.length > 0
       ? selectedFiles.map((f, i) => `${i + 1}. ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')
       : 'No files attached';
 
-    const emailPayload = {
-      to_email: 'dewanshmishra@gmail.com',
-      subject: `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹${fee} Paid`,
-      patient_name: submissionRecord.fullName,
-      patient_phone: submissionRecord.phone,
-      patient_email: submissionRecord.email || 'N/A',
-      diagnosis_condition: submissionRecord.condition || 'General Neuro-Vascular Review',
-      case_summary: submissionRecord.summary,
-      attached_files_count: selectedFiles.length,
-      attached_files_list: attachedFilesSummary,
-      payment_id: submissionRecord.paymentId,
-      amount_paid: `₹${fee}`,
-      submission_reference: submissionRecord.id,
-      hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
-    };
+    const subjectLine = `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹${fee} Paid`;
+    const messageBody =
+`SECOND OPINION SUBMISSION DETAILS
+==================================================
+Submission Ref : ${submissionRecord.id}
+Patient Name   : ${submissionRecord.fullName}
+Phone          : ${submissionRecord.phone}
+Email          : ${submissionRecord.email || 'N/A'}
+Condition      : ${submissionRecord.condition || 'General Neuro-Vascular Review'}
+Case Summary   : ${submissionRecord.summary}
+Payment ID     : ${submissionRecord.paymentId}
+Amount Paid    : ₹${fee}
+Files Attached : ${selectedFiles.length}
+${attachedFilesSummary}
+==================================================
+Please review the attached case details and follow up with the patient.`;
 
-    try {
-      await fetch('https://formspree.io/f/xknlqzyv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(emailPayload)
-      });
-    } catch (err) {
-      console.warn('Doctor email notification fallback:', err);
-    }
+    await sendDoctorEmail({
+      subjectLine,
+      patientName: submissionRecord.fullName,
+      patientPhone: submissionRecord.phone,
+      patientEmail: submissionRecord.email || 'N/A',
+      messageBody
+    });
   };
 
   // Trigger Razorpay Payment
@@ -108,10 +108,10 @@ export default function SecondOpinion({ onBack }) {
 
     const options = {
       key: razorpayKey,
-      amount: fee * 100, // fee in paise (₹500 default)
+      amount: fee * 100, // fee in paise (₹1 default for testing)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
-      description: "2nd Opinion Report Review Fee - Apollomedics",
+      description: "2nd Opinion Report Review Fee - Dr. Dewansh Mishra",
       image: "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id || ('pay_' + Math.random().toString(36).substring(2, 12));
@@ -124,7 +124,7 @@ export default function SecondOpinion({ onBack }) {
       },
       notes: {
         condition: formData.condition || "2nd Opinion Review",
-        hospital: "Apollomedics Super Speciality Hospital, Lucknow",
+        doctor: "Dr. Dewansh Mishra - Brain & Spine Vascular Specialist",
         fee: `₹${fee}`
       },
       theme: {
@@ -793,7 +793,7 @@ export default function SecondOpinion({ onBack }) {
                   border: '1px solid var(--border-color)'
                 }}>
                   <CreditCard size={18} color="var(--accent-teal)" style={{ flexShrink: 0 }} />
-                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra will receive email notification at dewanshmishra@gmail.com with your case details and attached file list upon payment.</span>
+                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra and the clinical team will receive instant notification with your case details upon payment.</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -871,7 +871,7 @@ export default function SecondOpinion({ onBack }) {
                   color: 'var(--text-secondary)',
                   textAlign: 'left'
                 }}>
-                  Dr. Dewansh Mishra has been notified at <strong>dewanshmishra@gmail.com</strong> with your case summary, payment receipt, and attached medical files list.
+                  Your case summary, payment receipt, and medical details have been received. Dr. Dewansh Mishra and the clinical team will review them and reach you shortly.
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', width: '100%' }}>

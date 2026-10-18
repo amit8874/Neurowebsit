@@ -5,7 +5,7 @@ import banner1Img from '../assets/banner1-.jpeg';
 import banner2Img from '../assets/banner2-.jpeg';
 import banner3Img from '../assets/banner3.jpeg';
 import banner4Img from '../assets/banner4.jpeg';
-import drDewanshImg from '../assets/dr-dewansh-mishra.jpeg';
+import drDewanshImg from '../assets/dr.dewan.jpeg';
 import strokeImg from '../assets/Patient-Stories/Brain-Stroke-100kb.jpeg';
 import aneurysmImg from '../assets/Patient-Stories/Brain aneurysm-100kb.jpeg';
 import avmImg from '../assets/Brain_AVM.png';
@@ -22,6 +22,61 @@ const INITIAL_GALLERY_IMAGES = Object.keys(galleryModules).map((path, index) => 
   };
 });
 
+// ─── Backend API Helpers ─────────────────────────────────────────────────────
+// Changes made from Admin Panel are saved here so ALL devices see the same data
+const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
+
+/**
+ * Save a data section to the backend server (fire-and-forget with graceful fallback).
+ * If the server is unreachable, data is still kept in localStorage.
+ */
+async function apiSave(key, data) {
+  try {
+    const res = await fetch(`${API_BASE}/api/data/${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (err) {
+    console.warn(`[CMS] Could not sync "${key}" to backend:`, err.message);
+  }
+}
+
+/**
+ * Fetch all persisted data from the backend.
+ * Returns null if the server is unavailable (fallback to localStorage/defaults).
+ */
+async function apiFetchAll() {
+  try {
+    const res = await fetch(`${API_BASE}/api/data`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json.data || null;
+  } catch (err) {
+    console.warn('[CMS] Backend not available, using cached/default data:', err.message);
+    return null;
+  }
+}
+
+/**
+ * Upload an image file to Cloudinary via the backend.
+ * Returns the permanent Cloudinary URL string.
+ * Usage: const url = await apiUploadImage(fileObject);
+ */
+async function apiUploadImage(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch(`${API_BASE}/api/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'Image upload failed');
+  return json.url; // permanent Cloudinary CDN URL
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const DataContext = createContext();
 
 const INITIAL_SITE_INFO = {
@@ -37,7 +92,7 @@ const INITIAL_SITE_INFO = {
   phone: "092084 30808",
   emergencyPhone: "084290 21960",
   email: "dewanshmishra@gmail.com",
-  consultationFee: 500,
+  consultationFee: 1,
   hoursMonSat: "Offline: 10:00 AM - 05:00 PM | Online: 11:00 AM - 07:00 PM",
   hoursOffline: "10:00 AM - 05:00 PM",
   hoursOnline: "11:00 AM - 07:00 PM"
@@ -416,26 +471,13 @@ const INITIAL_BLOGS = [
   }
 ];
 
-const INITIAL_CUSTOM_SECTIONS = [
-  {
-    id: 'sec-1',
-    title: 'Special Neuro-Vascular Outpatient Clinic',
-    subtitle: 'Comprehensive Care at Apollomedics Hospital, Lucknow',
-    content: 'Dr. Dewansh Mishra provides specialized consultation for complex brain vascular diseases, unruptured aneurysms, AVMs, and second opinions on MRI/DSA scans.',
-    badge: 'OPD ANNOUNCEMENT',
-    bgColor: 'rgba(6, 182, 212, 0.05)',
-    borderColor: 'rgba(6, 182, 212, 0.2)',
-    buttonText: 'Book OPD Appointment',
-    buttonLink: '#booking',
-    isActive: true
-  }
-];
+const INITIAL_CUSTOM_SECTIONS = [];
 
 export function DataProvider({ children }) {
   // ─── DATA VERSION CACHE BUSTER ───────────────────────────────────────────
   // Change this version string any time you push new initial data to production.
   // On mismatch, all old localStorage is cleared → fresh initial data loads.
-  const DATA_VERSION = 'v3';
+  const DATA_VERSION = 'v4';
   const storedVersion = localStorage.getItem('dewansh_data_version');
   if (storedVersion !== DATA_VERSION) {
     // Clear all old cached data keys
@@ -463,8 +505,8 @@ export function DataProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed) {
-          if (parsed.consultationFee === 600 || !parsed.consultationFee) {
-            parsed.consultationFee = 500;
+          if (!parsed.consultationFee || parsed.consultationFee === 500 || parsed.consultationFee === 600) {
+            parsed.consultationFee = 1;
           }
           parsed.hoursOffline = "10:00 AM - 05:00 PM";
           parsed.hoursOnline = "11:00 AM - 07:00 PM";
@@ -518,6 +560,26 @@ export function DataProvider({ children }) {
     return localStorage.getItem('dewansh_admin_token') === 'true';
   });
 
+  // ─── Backend Sync on Mount ───────────────────────────────────────────────────
+  // On first load, fetch the latest data from the backend server.
+  // This ensures that changes made on ANY device/system are reflected everywhere.
+  useEffect(() => {
+    apiFetchAll().then(backendData => {
+      if (!backendData) return; // Backend offline – keep localStorage data
+      // Only override state if the backend has saved data for that key
+      if (backendData.siteInfo) setSiteInfo(prev => ({ ...prev, ...backendData.siteInfo }));
+      if (backendData.heroSlides) setHeroSlides(backendData.heroSlides);
+      if (backendData.treatments) setTreatments(backendData.treatments);
+      if (backendData.testimonials) setTestimonials(backendData.testimonials);
+      if (backendData.patientStories) setPatientStories(backendData.patientStories);
+      if (backendData.blogs) setBlogs(backendData.blogs);
+      if (backendData.customSections) setCustomSections(backendData.customSections);
+      if (backendData.galleryImages) setGalleryImages(backendData.galleryImages);
+      console.log('[CMS] ✅ Data loaded from backend server');
+    });
+  }, []); // Runs once on mount
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // Sync to localStorage
   useEffect(() => {
     localStorage.setItem('dewansh_site_info', JSON.stringify(siteInfo));
@@ -552,15 +614,31 @@ export function DataProvider({ children }) {
   }, [galleryImages]);
 
   // Admin Auth Helpers
-  const loginAdmin = (email, password) => {
-    // Configurable Doctor Admin Login Credentials
-    if (email.toLowerCase().trim() === 'dewanshmishra@gmail.com' && password === 'admin123') {
-      setIsAdminLoggedIn(true);
-      localStorage.setItem('dewansh_admin_token', 'true');
-      return { success: true };
+  const loginAdmin = async (email, password) => {
+    // First, try the backend for credential verification (allows changing password via .env)
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setIsAdminLoggedIn(true);
+        localStorage.setItem('dewansh_admin_token', 'true');
+        return { success: true };
+      }
+      if (res.status === 401) {
+        return { success: false, message: json.message || 'Invalid Admin Email or Password' };
+      }
+    } catch {
+      // Backend not available — fall back to hardcoded credentials
+      console.warn('[CMS] Backend login unavailable, using fallback auth');
     }
-    // Also accept simple doctor login for testing ease
-    if (email.toLowerCase().trim() === 'admin@gmail.com' && password === 'admin123') {
+
+    // Fallback: hardcoded credentials (works when server is offline)
+    const validEmails = ['dewanshmishra@gmail.com', 'admin@gmail.com'];
+    if (validEmails.includes(email.toLowerCase().trim()) && password === 'admin123') {
       setIsAdminLoggedIn(true);
       localStorage.setItem('dewansh_admin_token', 'true');
       return { success: true };
@@ -573,90 +651,133 @@ export function DataProvider({ children }) {
     localStorage.removeItem('dewansh_admin_token');
   };
 
-  // CRUD Actions
+  // ─── CRUD Actions (each mutation saves to backend + localStorage) ──────────────
+
   const updateSiteInfo = (newInfo) => {
-    setSiteInfo((prev) => ({ ...prev, ...newInfo }));
+    const updated = { ...siteInfo, ...newInfo };
+    setSiteInfo(updated);
+    apiSave('siteInfo', updated);
   };
 
   // Hero Banners
   const addHeroSlide = (slide) => {
     const newSlide = { id: 'slide-' + Date.now(), isBannerOnly: true, ...slide };
-    setHeroSlides((prev) => [...prev, newSlide]);
+    const updated = [...heroSlides, newSlide];
+    setHeroSlides(updated);
+    apiSave('heroSlides', updated);
   };
   const updateHeroSlide = (id, updatedSlide) => {
-    setHeroSlides((prev) => prev.map(s => s.id === id ? { ...s, ...updatedSlide } : s));
+    const updated = heroSlides.map(s => s.id === id ? { ...s, ...updatedSlide } : s);
+    setHeroSlides(updated);
+    apiSave('heroSlides', updated);
   };
   const deleteHeroSlide = (id) => {
-    setHeroSlides((prev) => prev.filter(s => s.id !== id));
+    const updated = heroSlides.filter(s => s.id !== id);
+    setHeroSlides(updated);
+    apiSave('heroSlides', updated);
   };
 
   // Treatments
   const addTreatment = (item) => {
     const newItem = { id: 'trt-' + Date.now(), ...item };
-    setTreatments((prev) => [...prev, newItem]);
+    const updated = [...treatments, newItem];
+    setTreatments(updated);
+    apiSave('treatments', updated);
   };
   const updateTreatment = (id, updatedItem) => {
-    setTreatments((prev) => prev.map(t => t.id === id ? { ...t, ...updatedItem } : t));
+    const updated = treatments.map(t => t.id === id ? { ...t, ...updatedItem } : t);
+    setTreatments(updated);
+    apiSave('treatments', updated);
   };
   const deleteTreatment = (id) => {
-    setTreatments((prev) => prev.filter(t => t.id !== id));
+    const updated = treatments.filter(t => t.id !== id);
+    setTreatments(updated);
+    apiSave('treatments', updated);
   };
 
   // Testimonials
   const addTestimonial = (item) => {
     const newItem = { id: 'rev-' + Date.now(), ...item };
-    setTestimonials((prev) => [...prev, newItem]);
+    const updated = [...testimonials, newItem];
+    setTestimonials(updated);
+    apiSave('testimonials', updated);
   };
   const updateTestimonial = (id, updatedItem) => {
-    setTestimonials((prev) => prev.map(t => t.id === id ? { ...t, ...updatedItem } : t));
+    const updated = testimonials.map(t => t.id === id ? { ...t, ...updatedItem } : t);
+    setTestimonials(updated);
+    apiSave('testimonials', updated);
   };
   const deleteTestimonial = (id) => {
-    setTestimonials((prev) => prev.filter(t => t.id !== id));
+    const updated = testimonials.filter(t => t.id !== id);
+    setTestimonials(updated);
+    apiSave('testimonials', updated);
   };
 
   // Patient Stories
   const addPatientStory = (item) => {
     const newItem = { id: 'story-' + Date.now(), ...item };
-    setPatientStories((prev) => [...prev, newItem]);
+    const updated = [...patientStories, newItem];
+    setPatientStories(updated);
+    apiSave('patientStories', updated);
   };
   const updatePatientStory = (id, updatedItem) => {
-    setPatientStories((prev) => prev.map(s => s.id === id ? { ...s, ...updatedItem } : s));
+    const updated = patientStories.map(s => s.id === id ? { ...s, ...updatedItem } : s);
+    setPatientStories(updated);
+    apiSave('patientStories', updated);
   };
   const deletePatientStory = (id) => {
-    setPatientStories((prev) => prev.filter(s => s.id !== id));
+    const updated = patientStories.filter(s => s.id !== id);
+    setPatientStories(updated);
+    apiSave('patientStories', updated);
   };
 
   // Blogs
   const addBlog = (item) => {
     const newItem = { id: Date.now(), ...item };
-    setBlogs((prev) => [newItem, ...prev]);
+    const updated = [newItem, ...blogs]; // prepend so newest is first
+    setBlogs(updated);
+    apiSave('blogs', updated);
   };
   const updateBlog = (id, updatedItem) => {
-    setBlogs((prev) => prev.map(b => b.id === id ? { ...b, ...updatedItem } : b));
+    const updated = blogs.map(b => b.id === id ? { ...b, ...updatedItem } : b);
+    setBlogs(updated);
+    apiSave('blogs', updated);
   };
   const deleteBlog = (id) => {
-    setBlogs((prev) => prev.filter(b => b.id !== id));
+    const updated = blogs.filter(b => b.id !== id);
+    setBlogs(updated);
+    apiSave('blogs', updated);
   };
 
   // Custom Sections
   const addCustomSection = (section) => {
     const newSection = { id: 'sec-' + Date.now(), isActive: true, ...section };
-    setCustomSections((prev) => [...prev, newSection]);
+    const updated = [...customSections, newSection];
+    setCustomSections(updated);
+    apiSave('customSections', updated);
   };
   const updateCustomSection = (id, updatedSection) => {
-    setCustomSections((prev) => prev.map(s => s.id === id ? { ...s, ...updatedSection } : s));
+    const updated = customSections.map(s => s.id === id ? { ...s, ...updatedSection } : s);
+    setCustomSections(updated);
+    apiSave('customSections', updated);
   };
   const deleteCustomSection = (id) => {
-    setCustomSections((prev) => prev.filter(s => s.id !== id));
+    const updated = customSections.filter(s => s.id !== id);
+    setCustomSections(updated);
+    apiSave('customSections', updated);
   };
 
   // Gallery Images
   const addGalleryImage = (item) => {
     const newItem = { id: 'gallery-' + Date.now(), title: item.title || `Clinical Photo ${galleryImages.length + 1}`, url: item.url };
-    setGalleryImages((prev) => [newItem, ...prev]);
+    const updated = [newItem, ...galleryImages];
+    setGalleryImages(updated);
+    apiSave('galleryImages', updated);
   };
   const deleteGalleryImage = (id) => {
-    setGalleryImages((prev) => prev.filter(g => g.id !== id));
+    const updated = galleryImages.filter(g => g.id !== id);
+    setGalleryImages(updated);
+    apiSave('galleryImages', updated);
   };
 
   return (
@@ -692,7 +813,8 @@ export function DataProvider({ children }) {
       updateCustomSection,
       deleteCustomSection,
       addGalleryImage,
-      deleteGalleryImage
+      deleteGalleryImage,
+      uploadImage: apiUploadImage
     }}>
       {children}
     </DataContext.Provider>

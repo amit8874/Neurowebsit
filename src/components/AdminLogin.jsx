@@ -12,22 +12,25 @@ export default function AdminLogin({ isOpen, onClose, onLoginSuccess, isStandalo
 
   if (!isOpen && !isStandalone) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const res = loginAdmin(email, password);
+    try {
+      const res = await loginAdmin(email, password);
       if (res.success) {
-        setIsLoading(false);
         if (onLoginSuccess) onLoginSuccess();
         if (onClose) onClose();
       } else {
-        setIsLoading(false);
         setError(res.message || 'Invalid Admin Email or Password');
       }
-    }, 500);
+    } catch (err) {
+      setError('Login failed. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loginCard = (

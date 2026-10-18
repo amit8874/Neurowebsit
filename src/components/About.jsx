@@ -98,8 +98,8 @@ export default function About() {
       id="about"
       className="relative overflow-hidden"
       style={{
-        paddingTop: '45px',
-        paddingBottom: '36px',
+        paddingTop: '64px',
+        paddingBottom: '64px',
         backgroundColor: 'var(--bg-primary)',
         transition: 'background-color var(--transition-normal)',
         width: '100%',
@@ -126,9 +126,9 @@ export default function About() {
         {/* 2-Column Grid: Biography & Big Full-Height Doctor Image */}
         <div className="about-grid" style={{
           display: 'grid',
-          gridTemplateColumns: '1.15fr 0.85fr',
+          gridTemplateColumns: '1.05fr 0.95fr',
           gap: '40px',
-          alignItems: 'stretch',
+          alignItems: 'center',
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box'
@@ -231,36 +231,53 @@ export default function About() {
           {/* Right Column: Big Full Image of Dr. Dewansh Mishra */}
           <div style={{
             display: 'flex',
-            alignItems: 'stretch',
+            alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
             height: '100%',
-            minHeight: '340px',
+            minHeight: '620px',
             minWidth: 0
           }}>
-            <div className="glass-panel" style={{
+            <div className="glass-panel about-doctor-card" style={{
               width: '100%',
               height: '100%',
-              minHeight: '340px',
-              maxHeight: '500px',
-              borderRadius: 'var(--radius-lg)',
+              minHeight: '620px',
+              maxHeight: '820px',
+              borderRadius: 'var(--radius-xl)',
               overflow: 'hidden',
               boxShadow: 'var(--shadow-xl)',
-              border: '1px solid var(--border-color)',
+              border: '1.5px solid var(--border-color)',
               backgroundColor: 'var(--bg-secondary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              position: 'relative',
               padding: 0
             }}>
+              {/* Subtle ambient blurred backdrop matching the image colors */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `url(${siteInfo.doctorPhoto || drDewanshImg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(28px) brightness(0.4)',
+                transform: 'scale(1.2)',
+                opacity: 0.65
+              }} />
+
+              {/* Main doctor image — fully contained so 100% of the image displays */}
               <img
                 src={siteInfo.doctorPhoto || drDewanshImg}
                 alt={`${siteInfo.doctorName || 'Dr. Dewansh Mishra'} - Neurointervention Specialist`}
                 style={{
+                  position: 'relative',
+                  zIndex: 2,
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'top center',
+                  maxHeight: '800px',
+                  objectFit: 'contain',
+                  objectPosition: 'center center',
                   display: 'block'
                 }}
               />
@@ -284,20 +301,24 @@ export default function About() {
             width: 100% !important;
           }
           .about-grid > div:last-child {
-            min-height: 380px !important;
+            min-height: 520px !important;
+          }
+          .about-doctor-card {
+            min-height: 520px !important;
+            max-height: 700px !important;
           }
         }
         @media (max-width: 640px) {
           #about {
-            padding-top: 36px !important;
-            padding-bottom: 36px !important;
+            padding-top: 45px !important;
+            padding-bottom: 45px !important;
             overflow-x: hidden !important;
           }
           #about .section-title {
             font-size: 1.6rem !important;
           }
           .about-grid {
-            gap: 20px !important;
+            gap: 24px !important;
             width: 100% !important;
           }
           .about-grid > div {
@@ -306,13 +327,14 @@ export default function About() {
             box-sizing: border-box !important;
           }
           .about-grid > div:last-child {
-            min-height: 320px !important;
-            max-height: 420px !important;
-            height: 360px !important;
+            min-height: 440px !important;
+            max-height: 580px !important;
+            height: auto !important;
           }
-          .about-grid img {
-            object-fit: cover !important;
-            object-position: center 15% !important;
+          .about-doctor-card {
+            min-height: 440px !important;
+            max-height: 580px !important;
+            height: auto !important;
           }
           .about-tabs-header {
             overflow-x: auto !important;

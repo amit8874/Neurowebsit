@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { sendDoctorEmail } from '../utils/emailService';
 
 import strokeScanImg from '../assets/scans/stroke_scan.png';
 import aneurysmScanImg from '../assets/scans/aneurysm_scan.png';
@@ -116,46 +117,33 @@ export default function ScanOpinionEstimator({ onOpenBookingModal }) {
       console.warn('LocalStorage error:', err);
     }
 
-    // Direct Email Dispatch to Doctor's Email
-    const emailPayload = {
-      to_email: doctorEmail,
-      _replyto: formData.email ? formData.email.trim() : doctorEmail,
-      email: formData.email ? formData.email.trim() : 'patient@dewanshmishra.com',
-      name: reviewRequest.name,
-      phone: reviewRequest.phone,
-      patient_name: reviewRequest.name,
-      patient_phone: reviewRequest.phone,
-      patient_email: reviewRequest.email,
-      scan_type: activeCondition.title,
-      condition: activeCondition.title,
-      doctor: `${doctorName} (${doctorEmail})`,
-      hospital: siteInfo?.hospitalName || 'Apollomedics Super Speciality Hospital, Lucknow',
-      subject: `🚨 NEW BRAIN SCAN REVIEW: ${reviewRequest.name} - ${activeCondition.title}`,
-      _subject: `🚨 NEW BRAIN SCAN REVIEW: ${reviewRequest.name} - ${activeCondition.title}`,
-      message: `NEW PATIENT BRAIN SCAN REVIEW REQUEST:
+    // Direct Email Dispatch to Doctor's Gmail via EmailJS
+    const subjectLine = `🚨 NEW BRAIN SCAN REVIEW: ${reviewRequest.name} - ${activeCondition.title}`;
+    const messageBody =
+`BRAIN SCAN REVIEW REQUEST
 ==================================================
-Patient Name: ${reviewRequest.name}
-Phone Number: ${reviewRequest.phone}
-Email Address: ${reviewRequest.email}
+Request ID     : ${reviewRequest.id}
+Patient Name   : ${reviewRequest.name}
+Phone          : ${reviewRequest.phone}
+Email          : ${reviewRequest.email}
 Scan / Diagnosis: ${activeCondition.title}
-Clinical Summary: ${activeCondition.problemSolution}
-Next Steps: ${activeCondition.whatHappensNext}
-Timestamp: ${reviewRequest.timestamp}
-Doctor Recipient: ${doctorName} (${doctorEmail})
-Hospital: ${siteInfo?.hospitalName || 'Apollomedics Super Speciality Hospital, Lucknow'}
-==================================================
-Please follow up directly with the patient regarding their scan review.`
-    };
+Clinical Summary:
+${activeCondition.problemSolution}
 
-    try {
-      await fetch('https://formspree.io/f/xknlqzyv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(emailPayload)
-      });
-    } catch (err) {
-      console.warn('Doctor email notification fallback:', err);
-    }
+What Happens Next:
+${activeCondition.whatHappensNext}
+
+Timestamp      : ${reviewRequest.timestamp}
+==================================================
+Please follow up directly with the patient regarding their scan review.`;
+
+    await sendDoctorEmail({
+      subjectLine,
+      patientName: reviewRequest.name,
+      patientPhone: reviewRequest.phone,
+      patientEmail: reviewRequest.email,
+      messageBody
+    });
 
     setIsSending(false);
     setIsSubmitted(true);
@@ -563,7 +551,7 @@ Please follow up directly with the patient regarding their scan review.`
                     Review Request Sent Directly to Dr. Dewansh Mishra!
                   </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                    An automated email has been delivered to <strong>{doctorEmail}</strong>. Dr. Dewansh’s clinical team will follow up directly with <strong>{formData.name}</strong> at <strong>{formData.phone}</strong>.
+                    Your review request has been delivered directly to Dr. Dewansh Mishra's clinical team. They will follow up directly with <strong>{formData.name}</strong> at <strong>{formData.phone}</strong>.
                   </p>
                 </div>
               </div>
@@ -573,7 +561,7 @@ Please follow up directly with the patient regarding their scan review.`
                   href={`mailto:${doctorEmail}?subject=${encodeURIComponent(`Brain Scan Report: ${formData.name} (${activeCondition.title})`)}&body=${encodeURIComponent(`Dear Dr. Dewansh Mishra,\n\nI have requested a review for my ${activeCondition.title} scan.\n\nPatient Name: ${formData.name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'N/A'}\n\nPlease find my attached scan images/reports.\n\nThank you,\n${formData.name}`)}`}
                   className="btn btn-secondary"
                   style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  title="Attach MRI/CT scan files and send directly to doctor email"
+                  title="Attach MRI/CT scan files and send directly for specialist review"
                 >
                   <Mail size={15} color="var(--accent-teal)" />
                   <span>Email Reports Directly</span>
@@ -584,7 +572,7 @@ Please follow up directly with the patient regarding their scan review.`
                     className="btn btn-primary"
                     style={{ padding: '8px 18px', fontSize: '0.85rem', fontWeight: 700 }}
                   >
-                    <span>Proceed to Full OPD Appointment (₹500)</span>
+                    <span>Proceed to Full OPD Appointment (₹{siteInfo?.consultationFee ?? 1})</span>
                     <ArrowRight size={14} />
                   </button>
                 )}
@@ -641,7 +629,7 @@ Please follow up directly with the patient regarding their scan review.`
                     margin: 0,
                     lineHeight: '1.4'
                   }}>
-                    Sent directly to <strong>{doctorEmail}</strong>. Share your scan details for specialist review.
+                    Share your scan details directly with Dr. Dewansh Mishra for specialist review.
                   </p>
                 </div>
               </div>

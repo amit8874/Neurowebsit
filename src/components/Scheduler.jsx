@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarRange, Calendar, Clock, CheckCircle2, User, Phone, Mail, FileText, ChevronDown, Trash2, CreditCard, ArrowLeft } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { sendDoctorEmail } from '../utils/emailService';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -17,10 +18,12 @@ const loadRazorpayScript = () => {
   });
 };
 
+import { OFFLINE_SLOTS, ONLINE_SLOTS } from './BookingModal';
+
 export default function Scheduler() {
   const { siteInfo } = useData();
-  const fee = siteInfo?.consultationFee || 500;
-  const [step, setStep] = useState(1); // 1: Input, 2: Fee Review (₹500), 3: Success
+  const fee = siteInfo?.consultationFee ?? 1;
+  const [step, setStep] = useState(1); // 1: Input, 2: Fee Review, 3: Success
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -28,32 +31,55 @@ export default function Scheduler() {
     consultationMode: 'offline', // 'offline' (10 AM - 5 PM) or 'online' (11 AM - 7 PM)
     consultationType: 'aneurysm',
     date: '',
-    timeSlot: 'morning',
+    timeSlot: '',
     notes: ''
   });
 
   const getTimeSlotLabel = (mode, slot) => {
-    if (mode === 'online') {
-      return slot === 'morning' ? 'Morning / Midday (11:00 AM - 02:00 PM)' : 'Afternoon / Evening (03:00 PM - 07:00 PM)';
-    }
-    return slot === 'morning' ? 'Morning OPD (10:00 AM - 01:00 PM)' : 'Afternoon OPD (02:00 PM - 05:00 PM)';
+    const list = mode === 'online' ? ONLINE_SLOTS : OFFLINE_SLOTS;
+    const match = list.find(s => s.id === slot);
+    if (match) return match.label;
+    const otherList = mode === 'online' ? OFFLINE_SLOTS : ONLINE_SLOTS;
+    const otherMatch = otherList.find(s => s.id === slot);
+    if (otherMatch) return otherMatch.label;
+    if (slot === 'morning') return mode === 'online' ? '11:00 AM – 12:00 PM' : '10:00 AM – 11:00 AM';
+    if (slot === 'afternoon') return mode === 'online' ? '02:00 PM – 03:00 PM' : '02:00 PM – 03:00 PM';
+    return slot || '1-Hour Slot';
   };
 
   const [isLoading, setIsLoading] = useState(false);
   const [submittedRequest, setSubmittedRequest] = useState(null);
   const [existingBookings, setExistingBookings] = useState([]);
 
-  // Load existing bookings from localStorage
+  // Load existing bookings from localStorage and MongoDB backend
   useEffect(() => {
     const saved = localStorage.getItem('dewansh_bookings');
-    if (saved) {
-      try {
-        setExistingBookings(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    const local = saved ? JSON.parse(saved) : [];
+    setExistingBookings(local);
+
+    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
+    fetch(`${API_BASE}/api/bookings`)
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.bookings)) {
+          const map = new Map();
+          [...json.bookings, ...local].forEach(b => {
+            const key = b.id || `${b.date}_${b.timeSlot}`;
+            map.set(key, b);
+          });
+          setExistingBookings(Array.from(map.values()));
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const isSlotBooked = (slotId) => {
+    if (!formData.date || !slotId) return false;
+    return existingBookings.some(b =>
+      b.date === formData.date &&
+      b.timeSlot === slotId
+    );
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -83,38 +109,52 @@ export default function Scheduler() {
       alert('Please fill in all required fields (Name, Phone, Preferred Date).');
       return;
     }
+    if (!formData.timeSlot) {
+      alert('Please select an available 1-hour time slot.');
+      return;
+    }
+    if (isSlotBooked(formData.timeSlot)) {
+      alert('This 1-hour slot is already booked for the selected date. Please choose another available slot.');
+      return;
+    }
     setStep(2);
   };
 
-  // Notify Doctor via Email
+  // Notify Doctor via EmailJS (direct to Gmail)
   const notifyDoctorViaEmail = async (bookingData) => {
-    const emailPayload = {
-      to_email: 'dewanshmishra@gmail.com',
-      subject: `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹${fee} Paid (${bookingData.consultationMode === 'online' ? 'Online Video' : 'Offline OPD'})`,
-      patient_name: bookingData.name,
-      patient_phone: bookingData.phone,
-      patient_email: bookingData.email || 'N/A',
-      consultation_mode: bookingData.consultationMode === 'online' ? 'Online Video / Teleconsultation' : 'Offline In-Person OPD (Apollomedics Hospital)',
-      consultation_hours: bookingData.consultationMode === 'online' ? '11:00 AM - 07:00 PM' : '10:00 AM - 05:00 PM',
-      consultation_specialization: getConsultLabel(bookingData.consultationType),
-      appointment_date: bookingData.date,
-      time_slot: getTimeSlotLabel(bookingData.consultationMode, bookingData.timeSlot),
-      clinical_notes: bookingData.notes || 'None provided',
-      payment_id: bookingData.paymentId,
-      amount_paid: `₹${fee}`,
-      booking_reference: bookingData.id,
-      hospital: 'Apollomedics Super Speciality Hospital, Lucknow'
-    };
+    const subjectLine = `🚨 NEW BOOKING CONFIRMED: ${bookingData.name} - ₹${fee} Paid (${bookingData.consultationMode === 'online' ? 'Online Video' : 'Offline OPD'})`;
+    const messageBody =
+`APPOINTMENT BOOKING DETAILS
+==================================================
+Booking Ref    : ${bookingData.id}
+Patient Name   : ${bookingData.name}
+Phone          : ${bookingData.phone}
+Email          : ${bookingData.email || 'N/A'}
+Mode           : ${bookingData.consultationMode === 'online' ? 'Online Video Consultation (11:00 AM - 07:00 PM)' : 'In-Person Consultation (10:00 AM - 05:00 PM)'}
+Specialization : ${getConsultLabel(bookingData.consultationType)}
+Date & Slot    : ${bookingData.date} | ${getTimeSlotLabel(bookingData.consultationMode, bookingData.timeSlot)}
+Clinical Notes : ${bookingData.notes || 'None provided'}
+Payment ID     : ${bookingData.paymentId}
+Amount Paid    : ₹${fee}
+==================================================
+Please follow up with the patient at your earliest convenience.`;
 
-    try {
-      await fetch('https://formspree.io/f/xknlqzyv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(emailPayload)
-      });
-    } catch (err) {
-      console.warn('Doctor email notification fallback:', err);
-    }
+    await sendDoctorEmail({
+      subjectLine,
+      patientName: bookingData.name,
+      patientPhone: bookingData.phone,
+      patientEmail: bookingData.email || 'N/A',
+      messageBody,
+      bookingDetails: {
+        bookingId: bookingData.id,
+        consultationMode: bookingData.consultationMode,
+        specialization: getConsultLabel(bookingData.consultationType),
+        date: bookingData.date,
+        timeSlot: getTimeSlotLabel(bookingData.consultationMode, bookingData.timeSlot),
+        feePaid: `₹${fee}`,
+        paymentId: bookingData.paymentId
+      }
+    });
   };
 
   // Razorpay Payment Handler
@@ -138,10 +178,10 @@ export default function Scheduler() {
 
     const options = {
       key: razorpayKey, // Real Live Razorpay Key ID
-      amount: fee * 100, // fee in paise (₹500 default)
+      amount: fee * 100, // fee in paise (₹1 default for testing)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
-      description: "Consultation Fee - Apollomedics Hospital",
+      description: "Consultation Fee - Dr. Dewansh Mishra",
       image: "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
       handler: function (response) {
         const paymentId = response.razorpay_payment_id || ('pay_' + Math.random().toString(36).substring(2, 12));
@@ -154,7 +194,7 @@ export default function Scheduler() {
       },
       notes: {
         specialization: getConsultLabel(formData.consultationType),
-        hospital: "Apollomedics Super Speciality Hospital, Lucknow",
+        doctor: "Dr. Dewansh Mishra - Brain & Spine Vascular Specialist",
         fee: `₹${fee}`
       },
       theme: {
@@ -202,6 +242,14 @@ export default function Scheduler() {
     setExistingBookings(updatedBookings);
     localStorage.setItem('dewansh_bookings', JSON.stringify(updatedBookings));
 
+    // Save to MongoDB backend /api/bookings
+    const API_BASE = import.meta.env.VITE_EMAIL_SERVER_URL || 'http://localhost:3001';
+    fetch(`${API_BASE}/api/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newBooking)
+    }).catch(err => console.error('Failed to save booking to backend:', err));
+
     notifyDoctorViaEmail(newBooking);
 
     setSubmittedRequest(newBooking);
@@ -213,9 +261,10 @@ export default function Scheduler() {
       name: '',
       phone: '',
       email: '',
+      consultationMode: 'offline',
       consultationType: 'aneurysm',
       date: '',
-      timeSlot: 'morning',
+      timeSlot: '',
       notes: ''
     });
   };
@@ -416,7 +465,7 @@ export default function Scheduler() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'offline', timeSlot: 'morning' }))}
+                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'offline', timeSlot: '' }))}
                       style={{
                         padding: '12px 14px',
                         borderRadius: 'var(--radius-sm)',
@@ -437,13 +486,13 @@ export default function Scheduler() {
                         Hours: 10:00 AM – 05:00 PM
                       </span>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                        Apollomedics Hospital, Lucknow
+                        In-Person Consultation
                       </span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'online', timeSlot: 'morning' }))}
+                      onClick={() => setFormData(prev => ({ ...prev, consultationMode: 'online', timeSlot: '' }))}
                       style={{
                         padding: '12px 14px',
                         borderRadius: 'var(--radius-sm)',
@@ -470,77 +519,166 @@ export default function Scheduler() {
                   </div>
                 </div>
 
-                {/* Date & Time block */}
-                <div className="grid grid-cols-2" style={{ gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label htmlFor="date" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Preferred Date *</label>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '10px 16px',
-                      backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
-                      gap: '10px'
-                    }}>
-                      <Calendar size={18} style={{ color: 'var(--text-muted)' }} />
-                      <input
-                        type="date"
-                        id="date"
-                        name="date"
-                        required
-                        value={formData.date}
-                        onChange={handleChange}
-                        style={{ border: 'none', background: 'none', outline: 'none', width: '100%', color: 'var(--text-primary)', fontSize: '0.9rem' }}
-                      />
-                    </div>
+                {/* Preferred Date */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label htmlFor="date" style={{ fontSize: '0.875rem', fontWeight: 600 }}>Preferred Date *</label>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '10px 16px',
+                    backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
+                    gap: '10px'
+                  }}>
+                    <Calendar size={18} style={{ color: 'var(--text-muted)' }} />
+                    <input
+                      type="date"
+                      id="date"
+                      name="date"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      value={formData.date}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        setFormData(prev => ({ ...prev, date: newDate, timeSlot: '' }));
+                      }}
+                      style={{ border: 'none', background: 'none', outline: 'none', width: '100%', color: 'var(--text-primary)', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                </div>
+
+                {/* 1-Hour Time Slot Selection */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                    <label style={{ fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                      <Clock size={16} style={{ color: 'var(--accent-teal)' }} />
+                      Select 1-Hour Slot ({formData.consultationMode === 'online' ? '11:00 AM – 07:00 PM' : '10:00 AM – 05:00 PM'}) *
+                    </label>
+                    {formData.timeSlot && (
+                      <span style={{ fontSize: '0.78rem', color: 'var(--accent-teal)', fontWeight: 700 }}>
+                        Selected: {getTimeSlotLabel(formData.consultationMode, formData.timeSlot)}
+                      </span>
+                    )}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label htmlFor="timeSlot" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                      Preferred Slot ({formData.consultationMode === 'online' ? '11 AM - 7 PM' : '10 AM - 5 PM'})
-                    </label>
+                  {!formData.date ? (
                     <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
+                      padding: '14px',
+                      backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                      border: '1px dashed rgba(6, 182, 212, 0.3)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.825rem',
+                      color: 'var(--text-muted)',
+                      textAlign: 'center'
+                    }}>
+                      📅 Please select a consultation date above to view available 1-hour slots.
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+                      gap: '8px',
+                      maxHeight: '230px',
+                      overflowY: 'auto',
+                      padding: '6px',
                       border: '1px solid var(--border-color)',
                       borderRadius: 'var(--radius-sm)',
-                      padding: '10px 16px',
-                      backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
-                      position: 'relative'
+                      backgroundColor: 'rgba(var(--primary-rgb), 0.02)'
                     }}>
-                      <select
-                        id="timeSlot"
-                        name="timeSlot"
-                        value={formData.timeSlot}
-                        onChange={handleChange}
-                        style={{
-                          border: 'none',
-                          background: 'none',
-                          outline: 'none',
-                          width: '100%',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.9rem',
-                          appearance: 'none',
-                          cursor: 'pointer',
-                          paddingRight: '20px'
-                        }}
-                      >
-                        {formData.consultationMode === 'online' ? (
-                          <>
-                            <option value="morning">Morning / Midday (11:00 AM - 02:00 PM)</option>
-                            <option value="afternoon">Afternoon / Evening (03:00 PM - 07:00 PM)</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="morning">Morning OPD (10:00 AM - 01:00 PM)</option>
-                            <option value="afternoon">Afternoon OPD (02:00 PM - 05:00 PM)</option>
-                          </>
-                        )}
-                      </select>
-                      <ChevronDown size={16} style={{ position: 'absolute', right: '16px', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                      {(formData.consultationMode === 'online' ? ONLINE_SLOTS : OFFLINE_SLOTS).map((slot) => {
+                        const booked = isSlotBooked(slot.id);
+                        const isSelected = formData.timeSlot === slot.id;
+
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            disabled={booked}
+                            onClick={() => {
+                              if (!booked) {
+                                setFormData(prev => ({ ...prev, timeSlot: slot.id }));
+                              }
+                            }}
+                            title={booked ? 'This 1-hour slot is already booked' : `Select ${slot.label}`}
+                            style={{
+                              padding: '10px 8px',
+                              borderRadius: 'var(--radius-sm)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
+                              textAlign: 'center',
+                              transition: 'all 0.15s ease',
+                              cursor: booked ? 'not-allowed' : 'pointer',
+                              opacity: booked ? 0.45 : 1,
+                              pointerEvents: booked ? 'none' : 'auto',
+                              backgroundColor: booked
+                                ? 'rgba(239, 68, 68, 0.06)'
+                                : isSelected
+                                  ? 'rgba(6, 182, 212, 0.18)'
+                                  : 'var(--bg-primary)',
+                              border: booked
+                                ? '1px solid rgba(239, 68, 68, 0.28)'
+                                : isSelected
+                                  ? '2px solid var(--accent-teal)'
+                                  : '1px solid var(--border-color)',
+                              boxShadow: isSelected ? '0 0 10px rgba(6, 182, 212, 0.3)' : 'none'
+                            }}
+                          >
+                            <span style={{
+                              fontSize: '0.8rem',
+                              fontWeight: isSelected ? 800 : 600,
+                              color: booked
+                                ? 'var(--text-muted)'
+                                : isSelected
+                                  ? 'var(--accent-teal)'
+                                  : 'var(--text-primary)',
+                              textDecoration: booked ? 'line-through' : 'none'
+                            }}>
+                              {slot.label}
+                            </span>
+
+                            {booked ? (
+                              <span style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 800,
+                                color: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                                padding: '1px 6px',
+                                borderRadius: '4px'
+                              }}>
+                                Booked
+                              </span>
+                            ) : isSelected ? (
+                              <span style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 800,
+                                color: 'var(--accent-teal)',
+                                backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                                padding: '1px 6px',
+                                borderRadius: '4px'
+                              }}>
+                                ✓ Selected
+                              </span>
+                            ) : (
+                              <span style={{
+                                fontSize: '0.65rem',
+                                fontWeight: 700,
+                                color: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                padding: '1px 6px',
+                                borderRadius: '4px'
+                              }}>
+                                Available
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Additional Clinical Notes */}
@@ -660,7 +798,7 @@ export default function Scheduler() {
                   border: '1px solid var(--border-color)'
                 }}>
                   <CreditCard size={18} color="var(--accent-teal)" style={{ flexShrink: 0 }} />
-                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra will receive email notification at dewanshmishra@gmail.com upon payment.</span>
+                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra and the clinical team will receive instant notification upon payment.</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -716,7 +854,7 @@ export default function Scheduler() {
                   fontSize: '0.85rem',
                   color: 'var(--text-secondary)'
                 }}>
-                  Doctor has been notified at <strong>dewanshmishra@gmail.com</strong> with your appointment details and payment receipt.
+                  Your appointment details and payment receipt have been confirmed. Dr. Dewansh Mishra and the clinical team will reach you shortly.
                 </div>
 
                 <button onClick={() => { setStep(1); setSubmittedRequest(null); }} className="btn btn-primary">
@@ -748,7 +886,7 @@ export default function Scheduler() {
                 <strong>2. Doctor Fee:</strong> Consultation fee is ₹{fee} payable via secure Razorpay checkout (UPI, Cards, NetBanking).
               </p>
               <p>
-                <strong>3. Email Notification:</strong> Upon payment, Dr. Dewansh Mishra receives instant email notification at dewanshmishra@gmail.com with your appointment schedule.
+                <strong>3. Instant Notification:</strong> Upon payment, Dr. Dewansh Mishra and the clinical team receive instant notification with your appointment schedule.
               </p>
             </div>
 

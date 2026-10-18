@@ -27,22 +27,6 @@ import {
   Camera
 } from 'lucide-react';
 
-const handleFileUpload = (e, callback) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  if (!file.type.startsWith('image/')) {
-    alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    callback(event.target.result);
-  };
-  reader.readAsDataURL(file);
-};
-
 export default function AdminPanel({ onClose }) {
   const {
     siteInfo,
@@ -74,11 +58,44 @@ export default function AdminPanel({ onClose }) {
     updateCustomSection,
     deleteCustomSection,
     addGalleryImage,
-    deleteGalleryImage
+    deleteGalleryImage,
+    uploadImage
   } = useData();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [notification, setNotification] = useState('');
+
+  // Upload image to Cloudinary via backend, with local preview fallback
+  const handleFileUpload = async (e, callback) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (PNG, JPG, WEBP, etc.)');
+      return;
+    }
+
+    try {
+      if (uploadImage) {
+        setNotification('⏳ Uploading image to Cloudinary...');
+        const cloudinaryUrl = await uploadImage(file);
+        callback(cloudinaryUrl);
+        setNotification('✅ Image uploaded to Cloudinary successfully!');
+        setTimeout(() => setNotification(''), 3500);
+        return;
+      }
+    } catch (err) {
+      console.warn('Cloudinary upload error, using local fallback:', err.message);
+      setNotification('⚠️ Cloudinary upload issue, used local preview');
+      setTimeout(() => setNotification(''), 3500);
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      callback(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Local state for forms
   const [infoForm, setInfoForm] = useState({ ...siteInfo });
