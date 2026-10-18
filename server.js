@@ -422,8 +422,10 @@ app.get('/api/health', async (_, res) => {
 const distDir = join(__dirname, 'dist');
 if (existsSync(distDir)) {
   app.use(express.static(distDir));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) return next();
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ success: false, error: 'API endpoint not found' });
+    }
     res.sendFile(join(distDir, 'index.html'));
   });
 }
