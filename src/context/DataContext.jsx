@@ -9,6 +9,7 @@ import drDewanshImg from '../assets/dr.dewan.jpeg';
 import strokeImg from '../assets/Patient-Stories/Brain-Stroke-100kb.jpeg';
 import aneurysmImg from '../assets/Patient-Stories/Brain aneurysm-100kb.jpeg';
 import avmImg from '../assets/Brain_AVM.png';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 
 const galleryModules = import.meta.glob('../assets/gallary/*.jpeg', { eager: true, import: 'default' });
 
@@ -92,10 +93,62 @@ const INITIAL_SITE_INFO = {
   phone: "092084 30808",
   emergencyPhone: "084290 21960",
   email: "dewanshmishra@gmail.com",
-  consultationFee: 1,
+  neuroReviewEmail: "neuroradiologyreview@gmail.com",
+  consultationFee: 500,
   hoursMonSat: "Offline: 10:00 AM - 05:00 PM | Online: 11:00 AM - 07:00 PM",
   hoursOffline: "10:00 AM - 05:00 PM",
   hoursOnline: "11:00 AM - 07:00 PM"
+};
+
+export const INITIAL_ABOUT_DATA = {
+  bioParagraph1: "Dr Dewansh Mishra is a Brain & Spine Vascular Specialist at Apollomedics Super Speciality Hospital. He holds DM Neuroradiology (SCTIMST), MD, MBBS from An Institution of National Importance (INI) Under GOI, specializing in comprehensive neuro-interventional treatments.",
+  bioParagraph2: "With 8+ Years of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.",
+  credentials: [
+    {
+      id: 'cred-1',
+      degree: 'DM - Neuroradiology',
+      institution: 'Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum',
+      highlight: '• An Institution of National Importance (INI) Under GOI'
+    },
+    {
+      id: 'cred-2',
+      degree: 'MD - Radiodiagnosis',
+      institution: 'Advanced postgraduate degree specializing in neuro-imaging & diagnostic radiology',
+      highlight: ''
+    },
+    {
+      id: 'cred-3',
+      degree: 'MBBS',
+      institution: 'Core medical degree establishing foundational clinical and surgical competence',
+      highlight: ''
+    }
+  ],
+  specializations: [
+    {
+      id: 'spec-1',
+      title: 'Consultant Interventional Neuroradiologist',
+      subtitle: 'Apollomedics Super Speciality Hospital, Lucknow',
+      description: 'Specializing in acute mechanical thrombectomy, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.'
+    },
+    {
+      id: 'spec-2',
+      title: '8+ Years Specialized Expertise',
+      subtitle: '',
+      description: 'Extensive clinical experience in endovascular stroke care, diagnostic 3D cerebral angiograms, and non-surgical neurovascular treatments.'
+    }
+  ],
+  affiliations: [
+    {
+      id: 'aff-1',
+      title: 'ISVIR-UP Executive Member',
+      description: 'Executive member of Indian Society of Vascular and Interventional Radiology (UP Chapter).'
+    },
+    {
+      id: 'aff-2',
+      title: 'Research & Thesis',
+      description: 'Pioneered thesis on brain dAVF neurocognitive implications, MRA role in CCF, and identified the central non-enhancement sign in carotid body tumors.'
+    }
+  ]
 };
 
 const INITIAL_HERO_SLIDES = [
@@ -156,15 +209,15 @@ const INITIAL_TREATMENTS = [
   },
   {
     id: 'neuroreview',
-    title: 'Diagnostic Neuroimaging Consultation (Neuroreview)',
-    category: 'Neuroreview',
-    shortDesc: 'Subspecialty expert second opinion and comprehensive review of Brain/Spine MRI, CT, and vessel imaging scans.',
-    symptoms: ['Complex or inconclusive MRI/CT findings', 'Persistent unexplained neurological symptoms', 'Pre-treatment surgical evaluation', 'Second opinion request'],
-    procedure: 'Subspecialty Neuroimaging & Multi-Modality Scans Review',
-    details: 'Expert neuroradiological consultation analyzing high-resolution MRI sequences (DWI, PWI, MRA/MRV), CT angiograms, and diagnostic scans. Delivers precise diagnostic clarity, detailed report interpretations, and personalized treatment recommendations.',
+    title: 'NeuroReview™ — 2nd Opinion on Scan',
+    category: 'NeuroReview',
+    shortDesc: 'Subspecialty expert 2nd opinion and comprehensive review of Brain/Spine MRI, CT, and vessel imaging scans.',
+    symptoms: ['Complex or inconclusive MRI/CT findings', 'Persistent unexplained neurological symptoms', 'Pre-treatment surgical evaluation', 'Second opinion on brain scan'],
+    procedure: 'NeuroReview Subspecialty Neuroimaging & Multi-Modality Scans Review',
+    details: 'Expert neuroradiological consultation analyzing high-resolution MRI sequences (DWI, PWI, MRA/MRV), CT angiograms, and diagnostic scans under our dedicated NeuroReview service. Delivers decisive diagnostic clarity, detailed report interpretations, and personalized treatment recommendations. Contact: neuroradiologyreview@gmail.com.',
     color: '#8b5cf6',
     iconType: 'FileSearch',
-    features: ['Expert Second Opinion', 'Detailed Scan Analysis', 'Clear Action Plan']
+    features: ['Expert 2nd Opinion on Scan', 'Detailed Scan Analysis', 'Clear Action Plan']
   }
 ];
 
@@ -505,8 +558,8 @@ export function DataProvider({ children }) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed) {
-          if (!parsed.consultationFee || parsed.consultationFee === 500 || parsed.consultationFee === 600) {
-            parsed.consultationFee = 1;
+          if (!parsed.consultationFee || parsed.consultationFee === 1) {
+            parsed.consultationFee = 500;
           }
           parsed.hoursOffline = "10:00 AM - 05:00 PM";
           parsed.hoursOnline = "11:00 AM - 07:00 PM";
@@ -556,6 +609,27 @@ export function DataProvider({ children }) {
     return saved ? JSON.parse(saved) : INITIAL_GALLERY_IMAGES;
   });
 
+  const [aboutData, setAboutData] = useState(() => {
+    const saved = localStorage.getItem('dewansh_about_data');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...INITIAL_ABOUT_DATA,
+            ...parsed,
+            credentials: Array.isArray(parsed.credentials) ? parsed.credentials : INITIAL_ABOUT_DATA.credentials,
+            specializations: Array.isArray(parsed.specializations) ? parsed.specializations : INITIAL_ABOUT_DATA.specializations,
+            affiliations: Array.isArray(parsed.affiliations) ? parsed.affiliations : INITIAL_ABOUT_DATA.affiliations
+          };
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return INITIAL_ABOUT_DATA;
+  });
+
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('dewansh_admin_token') === 'true';
   });
@@ -566,7 +640,21 @@ export function DataProvider({ children }) {
   useEffect(() => {
     apiFetchAll().then(backendData => {
       if (!backendData) return; // Backend offline – keep localStorage data
-      if (backendData.siteInfo) setSiteInfo(prev => ({ ...prev, ...backendData.siteInfo }));
+      if (backendData.siteInfo) {
+        if (!backendData.siteInfo.consultationFee || backendData.siteInfo.consultationFee === 1) {
+          backendData.siteInfo.consultationFee = 500;
+        }
+        setSiteInfo(prev => ({ ...prev, ...backendData.siteInfo }));
+      }
+      if (backendData.aboutData) {
+        setAboutData(prev => ({
+          ...prev,
+          ...backendData.aboutData,
+          credentials: Array.isArray(backendData.aboutData.credentials) ? backendData.aboutData.credentials : prev.credentials,
+          specializations: Array.isArray(backendData.aboutData.specializations) ? backendData.aboutData.specializations : prev.specializations,
+          affiliations: Array.isArray(backendData.aboutData.affiliations) ? backendData.aboutData.affiliations : prev.affiliations
+        }));
+      }
       if (Array.isArray(backendData.heroSlides)) setHeroSlides(backendData.heroSlides);
       if (Array.isArray(backendData.treatments)) setTreatments(backendData.treatments);
       if (Array.isArray(backendData.testimonials)) setTestimonials(backendData.testimonials);
@@ -612,6 +700,10 @@ export function DataProvider({ children }) {
     localStorage.setItem('dewansh_gallery_images', JSON.stringify(galleryImages));
   }, [galleryImages]);
 
+  useEffect(() => {
+    localStorage.setItem('dewansh_about_data', JSON.stringify(aboutData));
+  }, [aboutData]);
+
   // Admin Auth Helpers
   const loginAdmin = async (email, password) => {
     // First, try the backend for credential verification (allows changing password via .env)
@@ -656,6 +748,12 @@ export function DataProvider({ children }) {
     const updated = { ...siteInfo, ...newInfo };
     setSiteInfo(updated);
     apiSave('siteInfo', updated);
+  };
+
+  const updateAboutData = (newAboutData) => {
+    const updated = typeof newAboutData === 'function' ? newAboutData(aboutData) : { ...aboutData, ...newAboutData };
+    setAboutData(updated);
+    apiSave('aboutData', updated);
   };
 
   // Hero Banners
@@ -782,6 +880,7 @@ export function DataProvider({ children }) {
   return (
     <DataContext.Provider value={{
       siteInfo,
+      aboutData,
       heroSlides,
       treatments,
       testimonials,
@@ -793,6 +892,7 @@ export function DataProvider({ children }) {
       loginAdmin,
       logoutAdmin,
       updateSiteInfo,
+      updateAboutData,
       addHeroSlide,
       updateHeroSlide,
       deleteHeroSlide,

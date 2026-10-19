@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Phone, Mail, MapPin, X, ExternalLink, Navigation } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 
 export default function ContactModal({ isOpen, onClose }) {
   const { siteInfo } = useData();
@@ -195,10 +196,54 @@ export default function ContactModal({ isOpen, onClose }) {
             </div>
             <div>
               <span style={{ fontSize: '0.725rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Email
+                Clinic Email
               </span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
                 {siteInfo.email}
+              </span>
+            </div>
+          </a>
+
+          {/* NeuroReview Dedicated 2nd Opinion Email Item */}
+          <a
+            href={`mailto:${siteInfo.neuroReviewEmail || 'neuroradiologyreview@gmail.com'}`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 14px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(6, 182, 212, 0.35)',
+              backgroundColor: 'rgba(6, 182, 212, 0.05)',
+              textDecoration: 'none',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--accent-teal)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.35)';
+              e.currentTarget.style.transform = 'none';
+            }}
+          >
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '10px',
+              overflow: 'hidden',
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(6, 182, 212, 0.35)',
+              border: '1.5px solid var(--accent-teal)'
+            }}>
+              <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div>
+              <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--accent-teal)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                NeuroReview (2nd Opinion on Scan)
+              </span>
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                {siteInfo.neuroReviewEmail || 'neuroradiologyreview@gmail.com'}
               </span>
             </div>
           </a>

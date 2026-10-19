@@ -106,7 +106,6 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
               padding: '0',
               overflow: 'hidden',
               cursor: 'pointer',
-              height: '500px',         /* fixed height — same for ALL banners */
               position: 'relative',
               backgroundColor: '#000'
             }}

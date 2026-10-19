@@ -1181,7 +1181,7 @@ export default function ConditionsTreated({ onOpenBookingModal }) {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                 <Clock size={16} color="var(--accent-teal)" />
-                <span>Consultation fee: ₹{siteInfo?.consultationFee ?? 1} (Directly Reviewed by Dr Dewansh Mishra)</span>
+                <span>Consultation fee: ₹{siteInfo?.consultationFee ?? 500} (Directly Reviewed by Dr Dewansh Mishra)</span>
               </div>
 
               <div className="flex" style={{ gap: '12px' }}>

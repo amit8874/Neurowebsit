@@ -23,7 +23,7 @@ import { API_BASE } from '../utils/apiConfig';
 
 export default function Scheduler() {
   const { siteInfo } = useData();
-  const fee = siteInfo?.consultationFee ?? 1;
+  const fee = siteInfo?.consultationFee ?? 500;
   const [step, setStep] = useState(1); // 1: Input, 2: Fee Review, 3: Success
   const [formData, setFormData] = useState({
     name: '',
@@ -178,7 +178,7 @@ Please follow up with the patient at your earliest convenience.`;
 
     const options = {
       key: razorpayKey, // Real Live Razorpay Key ID
-      amount: fee * 100, // fee in paise (₹1 default for testing)
+      amount: fee * 100, // fee in paise (₹500)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
       description: "Consultation Fee - Dr. Dewansh Mishra",

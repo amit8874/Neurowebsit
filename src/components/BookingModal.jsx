@@ -42,7 +42,7 @@ export const ONLINE_SLOTS = [
 
 export default function BookingModal({ isOpen, onClose }) {
   const { siteInfo } = useData();
-  const fee = siteInfo?.consultationFee ?? 1;
+  const fee = siteInfo?.consultationFee ?? 500;
   const doctorEmail = siteInfo?.email || 'dewanshmishra@gmail.com';
 
   const [step, setStep] = useState(1);
@@ -210,7 +210,7 @@ Please follow up with the patient at your earliest convenience.`;
 
     const options = {
       key: razorpayKey, // Real Live Razorpay Key ID
-      amount: fee * 100, // fee in paise (₹1 default for testing)
+      amount: fee * 100, // fee in paise (₹500)
       currency: "INR",
       name: "Dr. Dewansh Mishra",
       description: "Consultation Fee - Dr. Dewansh Mishra",

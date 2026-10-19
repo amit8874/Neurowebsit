@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { 
   LayoutDashboard, 
@@ -24,12 +24,15 @@ import {
   ShieldCheck,
   Eye,
   Upload,
-  Camera
+  Camera,
+  GraduationCap,
+  Award
 } from 'lucide-react';
 
 export default function AdminPanel({ onClose }) {
   const {
     siteInfo,
+    aboutData,
     heroSlides,
     treatments,
     testimonials,
@@ -39,6 +42,7 @@ export default function AdminPanel({ onClose }) {
     galleryImages,
     logoutAdmin,
     updateSiteInfo,
+    updateAboutData,
     addHeroSlide,
     updateHeroSlide,
     deleteHeroSlide,
@@ -132,9 +136,137 @@ export default function AdminPanel({ onClose }) {
   const [isAddingGalleryPhoto, setIsAddingGalleryPhoto] = useState(false);
   const [galleryForm, setGalleryForm] = useState({ title: '', url: '' });
 
+  // About Section state
+  const [aboutForm, setAboutForm] = useState(() => ({
+    bioParagraph1: aboutData?.bioParagraph1 || '',
+    bioParagraph2: aboutData?.bioParagraph2 || '',
+    credentials: aboutData?.credentials ? [...aboutData.credentials] : [],
+    specializations: aboutData?.specializations ? [...aboutData.specializations] : [],
+    affiliations: aboutData?.affiliations ? [...aboutData.affiliations] : []
+  }));
+
+  // Update local aboutForm whenever aboutData changes
+  useEffect(() => {
+    if (aboutData) {
+      setAboutForm({
+        bioParagraph1: aboutData.bioParagraph1 || '',
+        bioParagraph2: aboutData.bioParagraph2 || '',
+        credentials: aboutData.credentials ? [...aboutData.credentials] : [],
+        specializations: aboutData.specializations ? [...aboutData.specializations] : [],
+        affiliations: aboutData.affiliations ? [...aboutData.affiliations] : []
+      });
+    }
+  }, [aboutData]);
+
+  // Credential sub-modal/form
+  const [isAddingCred, setIsAddingCred] = useState(false);
+  const [editingCred, setEditingCred] = useState(null);
+  const [credForm, setCredForm] = useState({ degree: '', institution: '', highlight: '' });
+
+  // Specialization sub-modal/form
+  const [isAddingSpec, setIsAddingSpec] = useState(false);
+  const [editingSpec, setEditingSpec] = useState(null);
+  const [specForm, setSpecForm] = useState({ title: '', subtitle: '', description: '' });
+
+  // Affiliation sub-modal/form
+  const [isAddingAff, setIsAddingAff] = useState(false);
+  const [editingAff, setEditingAff] = useState(null);
+  const [affForm, setAffForm] = useState({ title: '', description: '' });
+
   const notify = (msg) => {
     setNotification(msg);
     setTimeout(() => setNotification(''), 3500);
+  };
+
+  // Handlers for About
+  const handleSaveAboutBio = (e) => {
+    if (e) e.preventDefault();
+    updateAboutData(aboutForm);
+    notify('Doctor Biography paragraphs saved successfully!');
+  };
+
+  const handleSaveCredential = (e) => {
+    e.preventDefault();
+    let updatedList;
+    if (editingCred) {
+      updatedList = aboutForm.credentials.map(c => c.id === editingCred.id ? { ...c, ...credForm } : c);
+      notify('Credential updated successfully!');
+    } else {
+      const newCred = { id: 'cred-' + Date.now(), ...credForm };
+      updatedList = [...aboutForm.credentials, newCred];
+      notify('New credential added successfully!');
+    }
+    const updatedAbout = { ...aboutForm, credentials: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    setIsAddingCred(false);
+    setEditingCred(null);
+    setCredForm({ degree: '', institution: '', highlight: '' });
+  };
+
+  const handleDeleteCredential = (id) => {
+    if (!window.confirm('Are you sure you want to delete this credential?')) return;
+    const updatedList = aboutForm.credentials.filter(c => c.id !== id);
+    const updatedAbout = { ...aboutForm, credentials: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    notify('Credential deleted');
+  };
+
+  const handleSaveSpecialization = (e) => {
+    e.preventDefault();
+    let updatedList;
+    if (editingSpec) {
+      updatedList = aboutForm.specializations.map(s => s.id === editingSpec.id ? { ...s, ...specForm } : s);
+      notify('Specialization updated successfully!');
+    } else {
+      const newSpec = { id: 'spec-' + Date.now(), ...specForm };
+      updatedList = [...aboutForm.specializations, newSpec];
+      notify('New specialization added successfully!');
+    }
+    const updatedAbout = { ...aboutForm, specializations: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    setIsAddingSpec(false);
+    setEditingSpec(null);
+    setSpecForm({ title: '', subtitle: '', description: '' });
+  };
+
+  const handleDeleteSpecialization = (id) => {
+    if (!window.confirm('Are you sure you want to delete this specialization?')) return;
+    const updatedList = aboutForm.specializations.filter(s => s.id !== id);
+    const updatedAbout = { ...aboutForm, specializations: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    notify('Specialization deleted');
+  };
+
+  const handleSaveAffiliation = (e) => {
+    e.preventDefault();
+    let updatedList;
+    if (editingAff) {
+      updatedList = aboutForm.affiliations.map(a => a.id === editingAff.id ? { ...a, ...affForm } : a);
+      notify('Affiliation / Research item updated!');
+    } else {
+      const newAff = { id: 'aff-' + Date.now(), ...affForm };
+      updatedList = [...aboutForm.affiliations, newAff];
+      notify('New research & affiliation item added!');
+    }
+    const updatedAbout = { ...aboutForm, affiliations: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    setIsAddingAff(false);
+    setEditingAff(null);
+    setAffForm({ title: '', description: '' });
+  };
+
+  const handleDeleteAffiliation = (id) => {
+    if (!window.confirm('Are you sure you want to delete this affiliation?')) return;
+    const updatedList = aboutForm.affiliations.filter(a => a.id !== id);
+    const updatedAbout = { ...aboutForm, affiliations: updatedList };
+    setAboutForm(updatedAbout);
+    updateAboutData(updatedAbout);
+    notify('Affiliation item deleted');
   };
 
   // Handlers
@@ -370,6 +502,7 @@ export default function AdminPanel({ onClose }) {
           {[
             { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
             { id: 'profile', label: 'Doctor & Hospital Info', icon: User },
+            { id: 'about', label: 'About & Credentials', icon: GraduationCap },
             { id: 'banners', label: 'Hero Banners', icon: ImageIcon },
             { id: 'treatments', label: 'Treatments & Care', icon: Stethoscope },
             { id: 'stories', label: 'Patient Stories', icon: BookOpen },
@@ -435,6 +568,7 @@ export default function AdminPanel({ onClose }) {
                 marginBottom: '32px'
               }}>
                 {[
+                  { title: 'Degrees & Credentials', count: aboutForm.credentials?.length || 3, icon: GraduationCap, color: '#06b6d4' },
                   { title: 'Hero Banners', count: heroSlides.length, icon: ImageIcon, color: '#38bdf8' },
                   { title: 'Treatments Listed', count: treatments.length, icon: Stethoscope, color: '#34d399' },
                   { title: 'Patient Case Stories', count: patientStories.length, icon: BookOpen, color: '#f43f5e' },
@@ -504,6 +638,24 @@ export default function AdminPanel({ onClose }) {
                     }}
                   >
                     <User size={16} /> Edit Doctor Profile & Consultation Hours
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('about')}
+                    style={{
+                      padding: '12px 20px',
+                      backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                      color: '#38bdf8',
+                      border: '1.5px solid #06b6d4',
+                      borderRadius: '10px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <GraduationCap size={16} /> Edit About Section & Credentials
                   </button>
 
                   <button
@@ -750,6 +902,17 @@ export default function AdminPanel({ onClose }) {
                   </div>
 
                   <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#38bdf8', fontWeight: 'bold', marginBottom: '6px' }}>NeuroReview Email (2nd Opinion on Scan)</label>
+                    <input
+                      type="email"
+                      value={infoForm.neuroReviewEmail || 'neuroradiologyreview@gmail.com'}
+                      onChange={(e) => setInfoForm({ ...infoForm, neuroReviewEmail: e.target.value })}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#1e293b', border: '1px solid #0891b2', borderRadius: '8px', color: '#fff' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
                     <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Consultation Fee (₹)</label>
                     <input
                       type="number"
@@ -793,6 +956,743 @@ export default function AdminPanel({ onClose }) {
                   <Save size={18} /> Save Profile Changes
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* TAB: ABOUT SECTION, CREDENTIALS & SPECIALIZATIONS */}
+          {activeTab === 'about' && (
+            <div style={{ maxWidth: '900px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '14px' }}>
+                <div>
+                  <h1 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 6px 0', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <GraduationCap size={24} color="#06b6d4" />
+                    About Section, Credentials &amp; Specializations
+                  </h1>
+                  <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>
+                    Customize doctor biography paragraphs, medical degrees (DM, MD, MBBS, INI), clinical specializations, and research affiliations.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveAboutBio}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#0284c7',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 15px rgba(2, 132, 199, 0.4)'
+                  }}
+                >
+                  <Save size={16} /> Save All Changes
+                </button>
+              </div>
+
+              {/* 1. Doctor Biography Paragraphs */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '14px',
+                padding: '24px',
+                marginBottom: '28px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '16px', color: '#38bdf8', margin: 0, fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={18} /> Doctor Biography &amp; Story Text
+                  </h3>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>Displayed in main About section</span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                    Biography Paragraph 1 (Introduction, Degrees &amp; Hospital)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. Dr Dewansh Mishra is a Brain & Spine Vascular Specialist at Apollomedics Super Speciality Hospital..."
+                    value={aboutForm.bioParagraph1}
+                    onChange={(e) => setAboutForm({ ...aboutForm, bioParagraph1: e.target.value })}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px', lineHeight: '1.6' }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    Leave empty to automatically use dynamic profile values (Doctor Name, Qualifications, Hospital).
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                    Biography Paragraph 2 (Clinical Experience &amp; Procedures)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g. With 8+ Years of clinical specialization, he is an expert in keyhole neuro-interventions..."
+                    value={aboutForm.bioParagraph2}
+                    onChange={(e) => setAboutForm({ ...aboutForm, bioParagraph2: e.target.value })}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px', lineHeight: '1.6' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={handleSaveAboutBio}
+                    style={{
+                      padding: '8px 18px',
+                      backgroundColor: '#1e293b',
+                      color: '#38bdf8',
+                      border: '1px solid #0284c7',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Save size={15} /> Save Biography
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Credentials & Degrees (DM, MD, MBBS, INI) */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '14px',
+                padding: '24px',
+                marginBottom: '28px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '16px', color: '#38bdf8', margin: '0 0 4px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <GraduationCap size={18} /> Credentials &amp; Medical Degrees
+                      <span style={{ fontSize: '11px', backgroundColor: 'rgba(6, 182, 212, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px' }}>
+                        {aboutForm.credentials.length} degrees
+                      </span>
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                      Shown inside the first tab "Credentials" in the About section.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingCred(true);
+                      setEditingCred(null);
+                      setCredForm({ degree: '', institution: '', highlight: '' });
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Plus size={16} /> Add Degree / Credential
+                  </button>
+                </div>
+
+                {/* Inline Credential Form */}
+                {(isAddingCred || editingCred) && (
+                  <form onSubmit={handleSaveCredential} style={{
+                    backgroundColor: '#1e293b',
+                    border: '1.5px solid #06b6d4',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#38bdf8' }}>
+                        {editingCred ? 'Edit Credential' : 'Add New Medical Degree / Credential'}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingCred(false); setEditingCred(null); }}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Degree / Qualification Title *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. DM - Neuroradiology, MD - Radiodiagnosis, MBBS"
+                          value={credForm.degree}
+                          onChange={(e) => setCredForm({ ...credForm, degree: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Special Highlight Tag (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. • An Institution of National Importance (INI) Under GOI"
+                          value={credForm.highlight}
+                          onChange={(e) => setCredForm({ ...credForm, highlight: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                        />
+                      </div>
+
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Institution &amp; Program Description *
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="e.g. Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum"
+                          value={credForm.institution}
+                          onChange={(e) => setCredForm({ ...credForm, institution: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingCred(false); setEditingCred(null); }}
+                        style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#94a3b8', border: '1px solid #334155', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ padding: '8px 18px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Save size={15} /> Save Credential
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List of Credentials */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {aboutForm.credentials.map((cred, idx) => (
+                    <div
+                      key={cred.id || idx}
+                      style={{
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #334155',
+                        borderRadius: '10px',
+                        padding: '14px 18px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px'
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: '800', fontSize: '15px', color: '#38bdf8' }}>
+                            {cred.degree}
+                          </span>
+                          {cred.highlight && (
+                            <span style={{ fontSize: '11px', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 8px', borderRadius: '6px', fontWeight: '600' }}>
+                              {cred.highlight}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5' }}>
+                          {cred.institution}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingCred(cred);
+                            setIsAddingCred(false);
+                            setCredForm({ degree: cred.degree || '', institution: cred.institution || '', highlight: cred.highlight || '' });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#0f172a',
+                            color: '#38bdf8',
+                            border: '1px solid #334155',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Edit3 size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCredential(cred.id)}
+                          style={{
+                            padding: '6px 10px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            color: '#f87171',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                          title="Delete credential"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Specialization Highlights */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '14px',
+                padding: '24px',
+                marginBottom: '28px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '16px', color: '#38bdf8', margin: '0 0 4px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Award size={18} /> Specialization Highlights
+                      <span style={{ fontSize: '11px', backgroundColor: 'rgba(6, 182, 212, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px' }}>
+                        {aboutForm.specializations.length} items
+                      </span>
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                      Shown inside the second tab "Specialization" in the About section.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingSpec(true);
+                      setEditingSpec(null);
+                      setSpecForm({ title: '', subtitle: '', description: '' });
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Plus size={16} /> Add Specialization
+                  </button>
+                </div>
+
+                {/* Inline Specialization Form */}
+                {(isAddingSpec || editingSpec) && (
+                  <form onSubmit={handleSaveSpecialization} style={{
+                    backgroundColor: '#1e293b',
+                    border: '1.5px solid #06b6d4',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#38bdf8' }}>
+                        {editingSpec ? 'Edit Specialization' : 'Add New Specialization Item'}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingSpec(false); setEditingSpec(null); }}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Specialization Title *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Consultant Interventional Neuroradiologist"
+                          value={specForm.title}
+                          onChange={(e) => setSpecForm({ ...specForm, title: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Hospital / Subtitle (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Apollomedics Super Speciality Hospital, Lucknow"
+                          value={specForm.subtitle}
+                          onChange={(e) => setSpecForm({ ...specForm, subtitle: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                        />
+                      </div>
+
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                          Detailed Description *
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="e.g. Specializing in acute mechanical thrombectomy, aneurysm coiling, flow diversion, AVM/MMA embolization..."
+                          value={specForm.description}
+                          onChange={(e) => setSpecForm({ ...specForm, description: e.target.value })}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingSpec(false); setEditingSpec(null); }}
+                        style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#94a3b8', border: '1px solid #334155', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ padding: '8px 18px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Save size={15} /> Save Specialization
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List of Specializations */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {aboutForm.specializations.map((spec, idx) => (
+                    <div
+                      key={spec.id || idx}
+                      style={{
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #334155',
+                        borderRadius: '10px',
+                        padding: '14px 18px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px'
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: '700', fontSize: '14px', color: '#f8fafc' }}>
+                            {spec.title}
+                          </span>
+                          {spec.subtitle && (
+                            <span style={{ fontSize: '12px', color: '#38bdf8', fontWeight: '600' }}>
+                              • {spec.subtitle}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>
+                          {spec.description}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingSpec(spec);
+                            setIsAddingSpec(false);
+                            setSpecForm({ title: spec.title || '', subtitle: spec.subtitle || '', description: spec.description || '' });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#0f172a',
+                            color: '#38bdf8',
+                            border: '1px solid #334155',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Edit3 size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSpecialization(spec.id)}
+                          style={{
+                            padding: '6px 10px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            color: '#f87171',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                          title="Delete specialization"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Research & Affiliations */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '14px',
+                padding: '24px',
+                marginBottom: '28px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '16px', color: '#38bdf8', margin: '0 0 4px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <BookOpen size={18} /> Research, Thesis &amp; Society Affiliations
+                      <span style={{ fontSize: '11px', backgroundColor: 'rgba(6, 182, 212, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px' }}>
+                        {aboutForm.affiliations.length} items
+                      </span>
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                      Shown inside the third tab "Research &amp; Affiliations" in the About section.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingAff(true);
+                      setEditingAff(null);
+                      setAffForm({ title: '', description: '' });
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Plus size={16} /> Add Research / Affiliation
+                  </button>
+                </div>
+
+                {/* Inline Affiliation Form */}
+                {(isAddingAff || editingAff) && (
+                  <form onSubmit={handleSaveAffiliation} style={{
+                    backgroundColor: '#1e293b',
+                    border: '1.5px solid #06b6d4',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#38bdf8' }}>
+                        {editingAff ? 'Edit Research / Affiliation' : 'Add New Item'}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingAff(false); setEditingAff(null); }}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                        Title / Role / Society *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. ISVIR-UP Executive Member, Research & Thesis"
+                        value={affForm.title}
+                        onChange={(e) => setAffForm({ ...affForm, title: e.target.value })}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                        Detailed Description *
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. Pioneered thesis on brain dAVF neurocognitive implications, MRA role in CCF..."
+                        value={affForm.description}
+                        onChange={(e) => setAffForm({ ...affForm, description: e.target.value })}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13px' }}
+                        required
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setIsAddingAff(false); setEditingAff(null); }}
+                        style={{ padding: '8px 16px', backgroundColor: 'transparent', color: '#94a3b8', border: '1px solid #334155', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ padding: '8px 18px', backgroundColor: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      >
+                        <Save size={15} /> Save Item
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* List of Affiliations */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {aboutForm.affiliations.map((aff, idx) => (
+                    <div
+                      key={aff.id || idx}
+                      style={{
+                        backgroundColor: '#1e293b',
+                        border: '1px solid #334155',
+                        borderRadius: '10px',
+                        padding: '14px 18px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '16px'
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontWeight: '700', fontSize: '14px', color: '#f8fafc' }}>
+                          {aff.title}
+                        </span>
+                        <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>
+                          {aff.description}
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAff(aff);
+                            setIsAddingAff(false);
+                            setAffForm({ title: aff.title || '', description: aff.description || '' });
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#0f172a',
+                            color: '#38bdf8',
+                            border: '1px solid #334155',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Edit3 size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAffiliation(aff.id)}
+                          style={{
+                            padding: '6px 10px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                            color: '#f87171',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                          title="Delete item"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Bottom Save Button */}
+              <button
+                type="button"
+                onClick={handleSaveAboutBio}
+                style={{
+                  width: '100%',
+                  padding: '14px 28px',
+                  backgroundColor: '#0284c7',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 15px rgba(2, 132, 199, 0.4)',
+                  marginBottom: '20px'
+                }}
+              >
+                <Save size={18} /> Save All About Changes
+              </button>
             </div>
           )}
 

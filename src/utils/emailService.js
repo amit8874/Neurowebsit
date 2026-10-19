@@ -21,7 +21,8 @@ export async function sendDoctorEmail({
   patientPhone,
   patientEmail,
   messageBody,
-  bookingDetails
+  bookingDetails,
+  recipientEmail
 }) {
   try {
     const response = await fetch(`${EMAIL_API_URL}/api/send-email`, {
@@ -33,7 +34,8 @@ export async function sendDoctorEmail({
         patientPhone,
         patientEmail: patientEmail || 'Not provided',
         messageBody,
-        bookingDetails
+        bookingDetails,
+        recipientEmail
       })
     });
 

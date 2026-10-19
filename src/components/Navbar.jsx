@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Stethoscope, ChevronDown, Activity, Sparkles } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 
 export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatientStories, onOpenBlog, onOpenBookingModal, onOpenContactModal, onOpenAdmin, onBackHome, isSecondOpinion, isGallery, isPatientStories, isBlog }) {
   const { siteInfo } = useData();
@@ -37,12 +38,11 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
       hoverBg: '#2563eb',
       shadow: '0 4px 14px rgba(37, 99, 235, 0.45)',
       items: [
-        { title: 'Online Consultation', isSecondOpinion: true },
+        { title: 'NeuroReview™ (2nd Opinion on Scan)', isSecondOpinion: true },
         { title: 'Aneurysm Coiling/SAC/FD', href: '#conditions-treated' },
         { title: 'Mechanical Thrombectomy in brain stroke', href: '#conditions-treated' },
         { title: 'DSA/Angiography', href: '#conditions-treated' },
-        { title: 'AVM/DAVF embolization', href: '#conditions-treated' },
-        { title: 'Diagnostic Neuroimaging consultation(Neuroreview)', href: '#conditions-treated' }
+        { title: 'AVM/DAVF embolization', href: '#conditions-treated' }
       ]
     },
     {
@@ -174,21 +174,21 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
           </a>
 
           {/* Center: Navigation Buttons */}
-          <div className="desktop-nav-links" style={{ gap: '22px' }}>
+          <div className="desktop-nav-links" style={{ gap: '8px' }}>
             {navLinks.map((link, idx) => {
               const isHovered = hoveredNav === idx;
 
               const buttonStyle = {
                 backgroundColor: isHovered ? link.hoverBg : link.bg,
                 color: '#ffffff',
-                padding: '9px 18px',
+                padding: '6px 12px',
                 borderRadius: '9999px',
-                fontWeight: 700,
-                fontSize: '0.875rem',
+                fontWeight: 650,
+                fontSize: '0.8125rem',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
                 boxShadow: isHovered ? link.shadow : '0 2px 6px rgba(0, 0, 0, 0.18)',
                 transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
                 transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -217,7 +217,7 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
                       style={buttonStyle}
                     >
                       <span>{link.label}</span>
-                      <ChevronDown size={14} color="#ffffff" style={{
+                      <ChevronDown size={13} color="#ffffff" style={{
                         transition: 'transform 0.2s ease',
                         transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
                       }} />
@@ -298,18 +298,38 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
           </div>
 
           {/* Right: Action Buttons */}
-          <div className="desktop-nav-actions">
+          <div className="desktop-nav-actions" style={{ gap: '8px' }}>
             <button
               onClick={onOpenSecondOpinion}
               className="btn-pill btn-green-box"
-              style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 13px',
+                fontSize: '0.8125rem'
+              }}
             >
-              2nd Opinion
+              <img
+                src={neuroReviewLogo}
+                alt="NeuroReview"
+                style={{ width: '18px', height: '18px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.4)', boxShadow: '0 2px 6px rgba(0,0,0,0.2)' }}
+              />
+              <span>NeuroReview™ (2nd Opinion)</span>
             </button>
             <button
               onClick={onOpenBookingModal}
               className="btn-pill btn-blue-box-darktext"
-              style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                padding: '6px 13px',
+                fontSize: '0.8125rem'
+              }}
             >
               Book Appointment
             </button>
@@ -317,8 +337,9 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
               onClick={toggleTheme}
               className="theme-toggle-btn"
               aria-label="Toggle theme"
+              style={{ width: '34px', height: '34px' }}
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <button
               onClick={() => onOpenAdmin && onOpenAdmin()}
@@ -327,14 +348,15 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
                 border: '1px solid rgba(6, 182, 212, 0.25)',
                 color: 'var(--accent-teal)',
                 borderRadius: '9999px',
-                padding: '7px 12px',
-                fontSize: '0.8rem',
+                padding: '5px 10px',
+                fontSize: '0.75rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap'
               }}
               title="Doctor Admin Portal"
             >
@@ -463,9 +485,24 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
               onOpenSecondOpinion();
             }}
             className="mobile-drawer-btn mobile-drawer-btn-green"
-            style={{ border: 'none', cursor: 'pointer', textAlign: 'center', width: 'calc(100% - 24px)', margin: '4px 12px', display: 'block' }}
+            style={{
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'center',
+              width: 'calc(100% - 24px)',
+              margin: '4px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
           >
-            2nd Opinion
+            <img
+              src={neuroReviewLogo}
+              alt="NeuroReview"
+              style={{ width: '22px', height: '22px', borderRadius: '5px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.4)' }}
+            />
+            <span>NeuroReview™ (2nd Opinion)</span>
           </button>
           <button
             onClick={() => {
@@ -485,9 +522,22 @@ export default function Navbar({ onOpenSecondOpinion, onOpenGallery, onOpenPatie
         <button
           onClick={onOpenSecondOpinion}
           className="mobile-bottom-btn mobile-bottom-green"
-          style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{
+            border: 'none',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}
         >
-          2nd Opinion
+          <img
+            src={neuroReviewLogo}
+            alt="NeuroReview"
+            style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.4)' }}
+          />
+          <span>NeuroReview™ (2nd Opinion)</span>
         </button>
         <button
           onClick={() => {

@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
 
 export default function About() {
-  const { siteInfo } = useData();
+  const { siteInfo, aboutData } = useData();
   const [activeTab, setActiveTab] = useState('credentials');
 
   const tabs = [
@@ -13,79 +13,134 @@ export default function About() {
     { id: 'philosophy', label: 'Research & Affiliations', icon: <BookOpen size={18} /> }
   ];
 
+  const credentialsList = aboutData?.credentials?.length > 0 ? aboutData.credentials : [
+    {
+      id: 'cred-1',
+      degree: 'DM - Neuroradiology',
+      institution: 'Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum',
+      highlight: '• An Institution of National Importance (INI) Under GOI'
+    },
+    {
+      id: 'cred-2',
+      degree: 'MD - Radiodiagnosis',
+      institution: 'Advanced postgraduate degree specializing in neuro-imaging & diagnostic radiology',
+      highlight: ''
+    },
+    {
+      id: 'cred-3',
+      degree: 'MBBS',
+      institution: 'Core medical degree establishing foundational clinical and surgical competence',
+      highlight: ''
+    }
+  ];
+
+  const specsList = aboutData?.specializations?.length > 0 ? aboutData.specializations : [
+    {
+      id: 'spec-1',
+      title: 'Consultant Interventional Neuroradiologist',
+      subtitle: 'Apollomedics Super Speciality Hospital, Lucknow',
+      description: 'Specializing in acute mechanical thrombectomy, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.'
+    },
+    {
+      id: 'spec-2',
+      title: '8+ Years Specialized Expertise',
+      subtitle: '',
+      description: 'Extensive clinical experience in endovascular stroke care, diagnostic 3D cerebral angiograms, and non-surgical neurovascular treatments.'
+    }
+  ];
+
+  const affsList = aboutData?.affiliations?.length > 0 ? aboutData.affiliations : [
+    {
+      id: 'aff-1',
+      title: 'ISVIR-UP Executive Member',
+      description: 'Executive member of Indian Society of Vascular and Interventional Radiology (UP Chapter).'
+    },
+    {
+      id: 'aff-2',
+      title: 'Research & Thesis',
+      description: 'Pioneered thesis on brain dAVF neurocognitive implications, MRA role in CCF, and identified the central non-enhancement sign in carotid body tumors.'
+    }
+  ];
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'credentials':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
-              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--accent-teal)', margin: 0 }}>DM - Neuroradiology</p>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
-                Sree Chitra Tirunal Institute for Medical Sciences and Technology (SCTIMST), Trivandrum
-              </p>
-              <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-teal)', marginTop: '4px', margin: 0 }}>
-                • An Institution of National Importance (INI) Under GOI
-              </p>
-            </div>
-            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
-              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', margin: 0 }}>MD - Radiodiagnosis</p>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
-                Advanced postgraduate degree specializing in neuro-imaging & diagnostic radiology
-              </p>
-            </div>
-            <div style={{ padding: '14px 18px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-glass)' }}>
-              <p style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-primary)', margin: 0 }}>MBBS</p>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
-                Core medical degree establishing foundational clinical and surgical competence
-              </p>
-            </div>
+            {credentialsList.map((cred, idx) => (
+              <div
+                key={cred.id || idx}
+                style={{
+                  padding: '14px 18px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-glass)'
+                }}
+              >
+                <p style={{ fontWeight: 800, fontSize: '1.05rem', color: idx === 0 ? 'var(--accent-teal)' : 'var(--text-primary)', margin: 0 }}>
+                  {cred.degree}
+                </p>
+                {cred.institution && (
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
+                    {cred.institution}
+                  </p>
+                )}
+                {cred.highlight && (
+                  <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-teal)', marginTop: '4px', margin: 0 }}>
+                    {cred.highlight}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         );
       case 'experience':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <Building2 size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>Consultant Interventional Neuroradiologist</p>
-                <p style={{ fontSize: '0.875rem', color: 'var(--accent-teal)', fontWeight: 600, margin: '2px 0 4px' }}>Apollomedics Super Speciality Hospital, Lucknow</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
-                  Specializing in acute mechanical thrombectomy, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular interventions.
-                </p>
+            {specsList.map((spec, idx) => (
+              <div key={spec.id || idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                {idx === 0 ? (
+                  <Building2 size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                ) : (
+                  <ShieldCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                )}
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>{spec.title}</p>
+                  {spec.subtitle && (
+                    <p style={{ fontSize: '0.875rem', color: 'var(--accent-teal)', fontWeight: 600, margin: '2px 0 4px' }}>
+                      {spec.subtitle}
+                    </p>
+                  )}
+                  {spec.description && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                      {spec.description}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <ShieldCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>8+ Years Specialized Expertise</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: '1.5' }}>
-                  Extensive clinical experience in endovascular stroke care, diagnostic 3D cerebral angiograms, and non-surgical neurovascular treatments.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         );
       case 'philosophy':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <UserCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>ISVIR-UP Executive Member</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 6px' }}>
-                  Executive member of Indian Society of Vascular and Interventional Radiology (UP Chapter).
-                </p>
+            {affsList.map((aff, idx) => (
+              <div key={aff.id || idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                {idx === 0 ? (
+                  <UserCheck size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                ) : (
+                  <BookOpen size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
+                )}
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>{aff.title}</p>
+                  {aff.description && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 6px', lineHeight: '1.5' }}>
+                      {aff.description}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-              <BookOpen size={20} color="var(--accent-teal)" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.975rem', margin: 0 }}>Research & Thesis</p>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: '1.5' }}>
-                  Pioneered thesis on brain dAVF neurocognitive implications, MRA role in CCF, and identified the central non-enhancement sign in carotid body tumors.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         );
       default:
@@ -153,7 +208,13 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              <strong>{siteInfo.doctorName}</strong> is a {siteInfo.doctorTitle} at {siteInfo.hospitalName}. He holds <strong>{siteInfo.doctorQual}</strong> from {siteInfo.doctorAffiliation}, specializing in comprehensive neuro-interventional treatments.
+              {aboutData?.bioParagraph1 ? (
+                aboutData.bioParagraph1
+              ) : (
+                <>
+                  <strong>{siteInfo.doctorName}</strong> is a {siteInfo.doctorTitle} at {siteInfo.hospitalName}. He holds <strong>{siteInfo.doctorQual}</strong> from {siteInfo.doctorAffiliation}, specializing in comprehensive neuro-interventional treatments.
+                </>
+              )}
             </p>
 
             <p style={{
@@ -162,7 +223,13 @@ export default function About() {
               lineHeight: '1.7',
               margin: 0
             }}>
-              With {siteInfo.experienceYears} of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.
+              {aboutData?.bioParagraph2 ? (
+                aboutData.bioParagraph2
+              ) : (
+                <>
+                  With {siteInfo.experienceYears} of clinical specialization, he is an expert in keyhole neuro-interventions including mechanical thrombectomy for stroke, aneurysm coiling, flow diversion, AVM/MMA embolization, and spinal vascular care.
+                </>
+              )}
             </p>
 
             {/* Interactive Tabs Box for Credentials & Highlights */}

@@ -20,6 +20,7 @@ import aneurysmScanImg from '../assets/scans/aneurysm_scan.png';
 import avmScanImg from '../assets/scans/avm_scan.png';
 import carotidScanImg from '../assets/scans/carotid_scan.png';
 import otherScanImg from '../assets/scans/other_scan.png';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 
 const scanConditions = [
   {
@@ -64,19 +65,20 @@ const scanConditions = [
   },
   {
     id: 'other',
-    title: 'Other scan finding',
+    title: 'NeuroReview (Other scan finding / 2nd opinion)',
     iconType: 'other',
     image: otherScanImg,
     imageAlt: 'Comprehensive neuroimaging DICOM scan review diagram',
-    problemSolution: 'Inconclusive MRI/CT scan reports, unexplained pulsatile tinnitus (whooshing in ears), suspected venous sinus stenosis, dural fistulas, or intracranial hypotension. Having a subspecialty interventional neuroradiologist independently review raw DICOM scan series provides decisive diagnostic clarity.',
-    whatHappensNext: 'Dr. Dewansh performs an expert subspecialty second opinion review of your raw imaging to clarify inconclusive findings and provide a direct treatment roadmap.',
+    problemSolution: 'Inconclusive MRI/CT scan reports, unexplained pulsatile tinnitus (whooshing in ears), suspected venous sinus stenosis, dural fistulas, or intracranial hypotension. Having a subspecialty interventional neuroradiologist independently review raw DICOM scan series under NeuroReview provides decisive diagnostic clarity.',
+    whatHappensNext: 'Dr. Dewansh performs an expert NeuroReview subspecialty second opinion review of your raw imaging to clarify inconclusive findings and provide a direct treatment roadmap.',
     bookingType: 'mri'
   }
 ];
 
-export default function ScanOpinionEstimator({ onOpenBookingModal }) {
+export default function ScanOpinionEstimator({ onOpenBookingModal, onOpenSecondOpinion }) {
   const { siteInfo } = useData();
   const doctorEmail = siteInfo?.email || 'dewanshmishra@gmail.com';
+  const neuroReviewEmail = siteInfo?.neuroReviewEmail || 'neuroradiologyreview@gmail.com';
   const doctorName = siteInfo?.doctorName || 'Dr. Dewansh Mishra';
 
   const [selectedId, setSelectedId] = useState('stroke');
@@ -101,7 +103,7 @@ export default function ScanOpinionEstimator({ onOpenBookingModal }) {
     setIsSending(true);
 
     const reviewRequest = {
-      id: 'SR-' + Date.now().toString().slice(-6),
+      id: 'NR-' + Date.now().toString().slice(-6),
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       email: formData.email ? formData.email.trim() : 'Not provided',
@@ -117,11 +119,13 @@ export default function ScanOpinionEstimator({ onOpenBookingModal }) {
       console.warn('LocalStorage error:', err);
     }
 
-    // Direct Email Dispatch to Doctor's Gmail via EmailJS
-    const subjectLine = `🚨 NEW BRAIN SCAN REVIEW: ${reviewRequest.name} - ${activeCondition.title}`;
+    // Direct Email Dispatch to NeuroReview dedicated Gmail
+    const subjectLine = `🚨 NEUROREVIEW 2ND OPINION ON SCAN: ${reviewRequest.name} - ${activeCondition.title}`;
     const messageBody =
-`BRAIN SCAN REVIEW REQUEST
+`NEUROREVIEW 2ND OPINION ON SCAN REQUEST
 ==================================================
+Brand          : NeuroReview
+Review Desk    : ${neuroReviewEmail}
 Request ID     : ${reviewRequest.id}
 Patient Name   : ${reviewRequest.name}
 Phone          : ${reviewRequest.phone}
@@ -135,14 +139,15 @@ ${activeCondition.whatHappensNext}
 
 Timestamp      : ${reviewRequest.timestamp}
 ==================================================
-Please follow up directly with the patient regarding their scan review.`;
+Please follow up directly with the patient regarding their NeuroReview scan evaluation.`;
 
     await sendDoctorEmail({
       subjectLine,
       patientName: reviewRequest.name,
       patientPhone: reviewRequest.phone,
       patientEmail: reviewRequest.email,
-      messageBody
+      messageBody,
+      recipientEmail: neuroReviewEmail
     });
 
     setIsSending(false);
@@ -258,23 +263,53 @@ Please follow up directly with the patient regarding their scan review.`;
         {/* Top Header Section */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '36px' }}>
           
+          {/* Prominent NeuroReview Brand Badge & Large Logo */}
           <div style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            backgroundColor: 'rgba(6, 182, 212, 0.1)',
-            padding: '6px 16px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(6, 182, 212, 0.25)',
-            fontSize: '0.8rem',
-            fontWeight: 800,
-            letterSpacing: '0.04em',
-            color: 'var(--accent-teal)',
-            marginBottom: '12px',
-            textTransform: 'uppercase'
+            gap: '16px',
+            backgroundColor: 'rgba(6, 182, 212, 0.08)',
+            padding: '12px 24px',
+            borderRadius: 'var(--radius-xl)',
+            border: '1.5px solid rgba(6, 182, 212, 0.35)',
+            boxShadow: '0 4px 20px rgba(6, 182, 212, 0.15)',
+            marginBottom: '16px',
+            flexWrap: 'wrap',
+            justifyContent: 'center'
           }}>
-            <Brain size={16} />
-            <span>NEUROVASCULAR CARE</span>
+            <div style={{
+              width: '76px',
+              height: '76px',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              border: '2px solid var(--accent-teal)',
+              boxShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
+              backgroundColor: '#0a0f1d',
+              flexShrink: 0
+            }}>
+              <img
+                src={neuroReviewLogo}
+                alt="NeuroReview Icon"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                color: 'var(--accent-teal)',
+                textTransform: 'uppercase'
+              }}>
+                NEUROREVIEW™ • 2ND OPINION ON SCAN
+              </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Official Subspecialty Neuroradiology Review Desk
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Direct Desk: <a href={`mailto:${neuroReviewEmail}`} style={{ color: 'var(--accent-teal)', fontWeight: 600 }}>{neuroReviewEmail}</a>
+              </div>
+            </div>
           </div>
 
           <h2 style={{
@@ -283,20 +318,45 @@ Please follow up directly with the patient regarding their scan review.`;
             lineHeight: 1.2,
             fontFamily: 'var(--font-heading)',
             color: 'var(--text-primary)',
-            margin: '0 0 10px'
+            margin: '0 0 12px'
           }}>
-            Understand Your <span className="gradient-text">Brain Scan</span>
+            Understand Your Brain Scan with <span className="gradient-text">NeuroReview™</span>
           </h2>
 
           <p style={{
             fontSize: '1.025rem',
             color: 'var(--text-secondary)',
-            maxWidth: '720px',
+            maxWidth: '740px',
             lineHeight: '1.55',
-            margin: 0
+            margin: '0 0 18px'
           }}>
-            Clear information about scans and possible treatments. Every care plan is decided by your clinical team.
+            Subspecialty 2nd opinion and clear radiological evaluation of Brain &amp; Spine MRI, CT, and angiography scans. Every scan is evaluated under the <strong>NeuroReview™</strong> brand by Dr. Dewansh Mishra before deciding on invasive treatment or surgery.
           </p>
+
+          {/* Direct CTA button to open dedicated Second Opinion portal */}
+          {onOpenSecondOpinion && (
+            <button
+              onClick={onOpenSecondOpinion}
+              className="btn btn-primary"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 22px',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                boxShadow: '0 4px 16px rgba(6, 182, 212, 0.35)'
+              }}
+            >
+              <img
+                src={neuroReviewLogo}
+                alt="NeuroReview"
+                style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover' }}
+              />
+              <span>Open Dedicated NeuroReview™ 2nd Opinion Portal</span>
+              <ArrowRight size={16} />
+            </button>
+          )}
         </div>
 
         {/* Main Interactive Interactive Hub */}
@@ -534,37 +594,35 @@ Please follow up directly with the patient regarding their scan review.`;
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 340px' }}>
                 <div style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#10b981',
-                  flexShrink: 0
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.25)',
+                  border: '1.5px solid rgba(16, 185, 129, 0.4)'
                 }}>
-                  <CheckCircle2 size={26} />
+                  <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
                   <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 2px' }}>
-                    Review Request Sent Directly to Dr. Dewansh Mishra!
+                    Scan Review Request Delivered to NeuroReview!
                   </h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                    Your review request has been delivered directly to Dr. Dewansh Mishra's clinical team. They will follow up directly with <strong>{formData.name}</strong> at <strong>{formData.phone}</strong>.
+                    Your request has been routed directly to <strong>{neuroReviewEmail}</strong>. The NeuroReview clinical team will evaluate your scan and contact <strong>{formData.name}</strong> at <strong>{formData.phone}</strong>.
                   </p>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <a
-                  href={`mailto:${doctorEmail}?subject=${encodeURIComponent(`Brain Scan Report: ${formData.name} (${activeCondition.title})`)}&body=${encodeURIComponent(`Dear Dr. Dewansh Mishra,\n\nI have requested a review for my ${activeCondition.title} scan.\n\nPatient Name: ${formData.name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'N/A'}\n\nPlease find my attached scan images/reports.\n\nThank you,\n${formData.name}`)}`}
+                  href={`mailto:${neuroReviewEmail}?subject=${encodeURIComponent(`NeuroReview Scan Report: ${formData.name} (${activeCondition.title})`)}&body=${encodeURIComponent(`Dear NeuroReview Team,\n\nI have requested a 2nd opinion for my ${activeCondition.title} scan under NeuroReview.\n\nPatient Name: ${formData.name}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'N/A'}\n\nPlease find my attached scan images/reports.\n\nThank you,\n${formData.name}`)}`}
                   className="btn btn-secondary"
                   style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  title="Attach MRI/CT scan files and send directly for specialist review"
+                  title="Attach MRI/CT scan files and send directly to NeuroReview"
                 >
                   <Mail size={15} color="var(--accent-teal)" />
-                  <span>Email Reports Directly</span>
+                  <span>Email Scan to {neuroReviewEmail}</span>
                 </a>
                 {onOpenBookingModal && (
                   <button
@@ -572,7 +630,7 @@ Please follow up directly with the patient regarding their scan review.`;
                     className="btn btn-primary"
                     style={{ padding: '8px 18px', fontSize: '0.85rem', fontWeight: 700 }}
                   >
-                    <span>Proceed to Full OPD Appointment (₹{siteInfo?.consultationFee ?? 1})</span>
+                    <span>Proceed to Full OPD Appointment (₹{siteInfo?.consultationFee ?? 500})</span>
                     <ArrowRight size={14} />
                   </button>
                 )}
@@ -600,28 +658,25 @@ Please follow up directly with the patient regarding their scan review.`;
               {/* Left Info Details */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 320px' }}>
                 <div style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--accent-teal)',
+                  width: '66px',
+                  height: '66px',
+                  borderRadius: '14px',
+                  overflow: 'hidden',
                   flexShrink: 0,
-                  border: '1px solid rgba(6, 182, 212, 0.25)'
+                  boxShadow: '0 4px 16px rgba(6, 182, 212, 0.35)',
+                  border: '2px solid rgba(6, 182, 212, 0.45)'
                 }}>
-                  <UserCheck size={24} />
+                  <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div>
                   <h4 style={{
-                    fontSize: '1.15rem',
+                    fontSize: '1.2rem',
                     fontWeight: 800,
                     color: 'var(--text-primary)',
                     margin: '0 0 3px',
                     fontFamily: 'var(--font-heading)'
                   }}>
-                    Ask for a scan review
+                    NeuroReview — 2nd Opinion on Scan
                   </h4>
                   <p style={{
                     fontSize: '0.825rem',
@@ -629,7 +684,7 @@ Please follow up directly with the patient regarding their scan review.`;
                     margin: 0,
                     lineHeight: '1.4'
                   }}>
-                    Share your scan details directly with Dr. Dewansh Mishra for specialist review.
+                    Submit your scan details to our dedicated desk (<a href={`mailto:${neuroReviewEmail}`} style={{ color: 'var(--accent-teal)', textDecoration: 'none', fontWeight: 600 }}>{neuroReviewEmail}</a>) for subspecialty review.
                   </p>
                 </div>
               </div>
@@ -762,6 +817,13 @@ Please follow up directly with the patient regarding their scan review.`;
           }
         }
         @media (max-width: 640px) {
+          #scan-estimator h2 {
+            font-size: 1.6rem !important;
+          }
+          #scan-estimator .btn-primary {
+            width: 100% !important;
+            justify-content: center !important;
+          }
           .scan-review-bar {
             flex-direction: column !important;
             align-items: stretch !important;

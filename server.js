@@ -35,6 +35,7 @@ const CmsData = mongoose.model('CmsData', CmsDataSchema);
 // ─── Valid data keys ───────────────────────────────────────────────────────────
 const VALID_KEYS = [
   'siteInfo',
+  'aboutData',
   'heroSlides',
   'treatments',
   'testimonials',
@@ -295,21 +296,28 @@ app.post('/api/admin/login', (req, res) => {
 
 // ─── POST /api/send-email ──────────────────────────────────────────────────────
 app.post('/api/send-email', async (req, res) => {
-  const { subjectLine, patientName, patientPhone, patientEmail, messageBody, bookingDetails } = req.body || {};
+  const { subjectLine, patientName, patientPhone, patientEmail, messageBody, bookingDetails, recipientEmail } = req.body || {};
 
   if (!subjectLine || !patientName || !messageBody) {
     return res.status(400).json({ success: false, error: 'Missing required fields' });
   }
 
   const senderUser = (process.env.GMAIL_USER || '').trim();
-  const doctorTarget = (process.env.DOCTOR_EMAIL || senderUser || 'dewanshmishra@gmail.com').trim();
+  const neuroReviewEmail = (process.env.NEUROREVIEW_EMAIL || 'neuroradiologyreview@gmail.com').trim();
+  const defaultDoctorTarget = (process.env.DOCTOR_EMAIL || senderUser || 'dewanshmishra@gmail.com').trim();
+
+  const isNeuroReview = (subjectLine && (subjectLine.toUpperCase().includes('NEUROREVIEW') || subjectLine.toUpperCase().includes('2ND OPINION') || subjectLine.toUpperCase().includes('SCAN'))) ||
+                        (recipientEmail && recipientEmail.toLowerCase().includes('neuroradiologyreview'));
+
+  const doctorTarget = (recipientEmail && recipientEmail.trim()) || (isNeuroReview ? neuroReviewEmail : defaultDoctorTarget);
   const validReplyTo = patientEmail && typeof patientEmail === 'string' && patientEmail.includes('@')
     ? patientEmail.trim()
     : (senderUser || undefined);
 
+  const senderBrandName = isNeuroReview ? 'NeuroReview' : 'Dr. Dewansh Website';
   const doctorFrom = process.env.RESEND_API_KEY
-    ? (process.env.RESEND_FROM_EMAIL || 'Dr. Dewansh Website <onboarding@resend.dev>')
-    : `"Dr. Dewansh Website" <${senderUser}>`;
+    ? (process.env.RESEND_FROM_EMAIL || `${senderBrandName} <onboarding@resend.dev>`)
+    : `"${senderBrandName}" <${senderUser}>`;
 
   const mailOptions = {
     from: doctorFrom,
@@ -319,9 +327,9 @@ app.post('/api/send-email', async (req, res) => {
     text: messageBody,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 8px;">
-        <div style="background: linear-gradient(135deg, #0891b2, #0e7490); padding: 20px 24px; border-radius: 8px 8px 0 0;">
-          <h2 style="color: white; margin: 0; font-size: 18px;">Dr. Dewansh Mishra — Patient Notification</h2>
-          <p style="color: rgba(255,255,255,0.85); margin: 4px 0 0; font-size: 13px;">Brain &amp; Spine Vascular Specialist</p>
+        <div style="background: linear-gradient(135deg, #0891b2, #4f46e5); padding: 20px 24px; border-radius: 8px 8px 0 0;">
+          <h2 style="color: white; margin: 0; font-size: 18px;">${isNeuroReview ? '🧠 NeuroReview™ — 2nd Opinion on Scan' : 'Dr. Dewansh Mishra — Patient Notification'}</h2>
+          <p style="color: rgba(255,255,255,0.85); margin: 4px 0 0; font-size: 13px;">${isNeuroReview ? 'Dedicated Neuroradiology Review Desk (neuroradiologyreview@gmail.com)' : 'Brain & Spine Vascular Specialist'}</p>
         </div>
         <div style="background: white; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0;">
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -337,12 +345,17 @@ app.post('/api/send-email', async (req, res) => {
               <td style="padding: 10px 14px; font-weight: bold; color: #0891b2; border-bottom: 1px solid #e2e8f0;">Email</td>
               <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #e2e8f0;">${patientEmail || 'Not provided'}</td>
             </tr>
+            ${isNeuroReview ? `
+            <tr>
+              <td style="padding: 10px 14px; font-weight: bold; color: #6366f1; border-bottom: 1px solid #e2e8f0;">Service Desk</td>
+              <td style="padding: 10px 14px; color: #4338ca; font-weight: bold; border-bottom: 1px solid #e2e8f0;">NeuroReview (${doctorTarget})</td>
+            </tr>` : ''}
           </table>
           <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #0891b2;">
             <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; color: #334155; margin: 0; line-height: 1.6;">${messageBody}</pre>
           </div>
           <p style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
-            This is an automated notification from Dr. Dewansh Mishra's patient portal.
+            ${isNeuroReview ? 'This notification was dispatched to NeuroReview at ' + doctorTarget : "This is an automated notification from Dr. Dewansh Mishra's patient portal."}
           </p>
         </div>
       </div>

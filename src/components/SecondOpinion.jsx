@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, Mail, User } from 'lucide-react';
+import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, User } from 'lucide-react';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 import { useData } from '../context/DataContext';
 import { sendDoctorEmail } from '../utils/emailService';
 
@@ -21,7 +22,8 @@ const loadRazorpayScript = () => {
 
 export default function SecondOpinion({ onBack }) {
   const { siteInfo } = useData();
-  const fee = siteInfo?.consultationFee ?? 1;
+  const fee = siteInfo?.consultationFee ?? 500;
+  const neuroReviewEmail = siteInfo?.neuroReviewEmail || 'neuroradiologyreview@gmail.com';
   const [step, setStep] = useState(1); // 1: Input Form, 2: Fee Review, 3: Success Confirmation
   const [formData, setFormData] = useState({
     fullName: '',
@@ -62,10 +64,12 @@ export default function SecondOpinion({ onBack }) {
       ? selectedFiles.map((f, i) => `${i + 1}. ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')
       : 'No files attached';
 
-    const subjectLine = `🚨 NEW 2ND OPINION REPORT: ${submissionRecord.fullName} - ₹${fee} Paid`;
+    const subjectLine = `🚨 NEUROREVIEW 2ND OPINION ON SCAN: ${submissionRecord.fullName} - ₹${fee} Paid`;
     const messageBody =
-`SECOND OPINION SUBMISSION DETAILS
+`NEUROREVIEW — 2ND OPINION ON SCAN SUBMISSION DETAILS
 ==================================================
+Brand          : NeuroReview
+Review Desk    : ${neuroReviewEmail}
 Submission Ref : ${submissionRecord.id}
 Patient Name   : ${submissionRecord.fullName}
 Phone          : ${submissionRecord.phone}
@@ -84,7 +88,8 @@ Please review the attached case details and follow up with the patient.`;
       patientName: submissionRecord.fullName,
       patientPhone: submissionRecord.phone,
       patientEmail: submissionRecord.email || 'N/A',
-      messageBody
+      messageBody,
+      recipientEmail: neuroReviewEmail
     });
   };
 
@@ -108,11 +113,11 @@ Please review the attached case details and follow up with the patient.`;
 
     const options = {
       key: razorpayKey,
-      amount: fee * 100, // fee in paise (₹1 default for testing)
+      amount: fee * 100, // fee in paise (₹500)
       currency: "INR",
-      name: "Dr. Dewansh Mishra",
-      description: "2nd Opinion Report Review Fee - Dr. Dewansh Mishra",
-      image: "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
+      name: "NeuroReview — 2nd Opinion on Scan",
+      description: "NeuroReview 2nd Opinion on Scan Review Fee - Dr. Dewansh Mishra",
+      image: `${window.location.origin}/neuroreview-logo.jpg`,
       handler: function (response) {
         const paymentId = response.razorpay_payment_id || ('pay_' + Math.random().toString(36).substring(2, 12));
         completeSecondOpinionSubmission(paymentId);
@@ -123,7 +128,9 @@ Please review the attached case details and follow up with the patient.`;
         contact: formData.phone
       },
       notes: {
-        condition: formData.condition || "2nd Opinion Review",
+        brand: "NeuroReview",
+        condition: formData.condition || "2nd Opinion on Scan",
+        desk: neuroReviewEmail,
         doctor: "Dr. Dewansh Mishra - Brain & Spine Vascular Specialist",
         fee: `₹${fee}`
       },
@@ -241,8 +248,64 @@ Please review the attached case details and follow up with the patient.`;
           </button>
         </div>
 
+        {/* ================= TOP NEUROREVIEW BRAND SHOWCASE BANNER ================= */}
+        <div className="glass-panel neuroreview-hero-banner">
+          <div className="neuroreview-hero-left">
+            {/* The Big Uploaded NeuroReview Brand Icon */}
+            <div className="neuroreview-banner-logo-box">
+              <img
+                src={neuroReviewLogo}
+                alt="NeuroReview Brand Logo"
+                className="neuroreview-banner-logo-img"
+              />
+            </div>
+
+            {/* Brand Title & Direct Review Desk Specs */}
+            <div className="neuroreview-banner-info">
+              <div className="neuroreview-banner-pill">
+                <Sparkles size={12} color="var(--accent-teal)" />
+                <span>OFFICIAL 2ND OPINION ON SCAN BRAND</span>
+              </div>
+
+              <h2 className="neuroreview-banner-title">
+                NeuroReview<span style={{ color: 'var(--accent-teal)' }}>™</span>
+              </h2>
+
+              <p className="neuroreview-banner-sub">
+                Dedicated 2nd Opinion on Brain &amp; Spine Scans (MRI, CT, Angiography)
+              </p>
+
+              <div className="neuroreview-banner-meta">
+                <span className="neuroreview-meta-pill">
+                  <ShieldCheck size={14} style={{ flexShrink: 0 }} />
+                  <span>Confidential Clinical Scan Desk</span>
+                </span>
+                <span className="neuroreview-meta-doc">
+                  <Award size={14} style={{ flexShrink: 0 }} />
+                  <span>Evaluated by Dr. Dewansh Mishra (DM Neuroradiology, SCTIMST)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Banner Quick CTA */}
+          <div className="neuroreview-hero-right">
+            <a
+              href="#submit-report-form"
+              onClick={(e) => {
+                e.preventDefault();
+                const el = document.getElementById('submit-report-form');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="btn btn-primary neuroreview-banner-cta-btn"
+            >
+              Submit Your Scan (₹{fee})
+            </a>
+          </div>
+        </div>
+
         {/* Header Hero Section */}
-        <div className="glass-panel" style={{
+        <div className="glass-panel second-opinion-hero-panel" style={{
           padding: '36px',
           borderRadius: 'var(--radius-xl)',
           marginBottom: '40px',
@@ -257,18 +320,22 @@ Please review the attached case details and follow up with the patient.`;
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '12px',
                 backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                padding: '6px 14px',
+                padding: '7px 18px',
                 borderRadius: 'var(--radius-full)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
-                fontSize: '0.85rem',
+                border: '1px solid rgba(6, 182, 212, 0.3)',
+                fontSize: '0.875rem',
                 fontWeight: 700,
                 color: 'var(--accent-teal)',
                 alignSelf: 'flex-start'
               }}>
-                <Sparkles size={16} />
-                <span>Expert Neurovascular Review</span>
+                <img
+                  src={neuroReviewLogo}
+                  alt="NeuroReview"
+                  style={{ width: '32px', height: '32px', borderRadius: '7px', objectFit: 'cover', border: '1.5px solid var(--accent-teal)' }}
+                />
+                <span>NeuroReview™ • 2nd Opinion on Scan</span>
               </div>
 
               <h1 style={{
@@ -278,8 +345,8 @@ Please review the attached case details and follow up with the patient.`;
                 fontFamily: 'var(--font-heading)',
                 margin: 0
               }}>
-                Get an Expert Second Opinion from <br />
-                <span className="gradient-text">Dr. Dewansh Mishra</span>
+                Get an Expert 2nd Opinion on Scan with <br />
+                <span className="gradient-text">NeuroReview™</span>
               </h1>
 
               <p style={{
@@ -288,11 +355,11 @@ Please review the attached case details and follow up with the patient.`;
                 lineHeight: '1.6',
                 margin: 0
               }}>
-                8+ years of specialized experience in neurovascular and interventional neuroradiology procedures — send your reports before deciding on treatment.
+                <strong>NeuroReview™</strong> is our dedicated subspecialty second opinion service for Brain &amp; Spine MRI, CT, and angiography scans. Every case is personally evaluated with advanced neuroradiological precision by <strong>Dr. Dewansh Mishra</strong> before deciding on invasive surgery. Scan submissions and reports are handled directly through our dedicated digital review desk below.
               </p>
 
               {/* Stats Badges Row */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '4px' }}>
                 <div style={{
                   padding: '12px 18px',
                   borderRadius: 'var(--radius-md)',
@@ -300,7 +367,7 @@ Please review the attached case details and follow up with the patient.`;
                   border: '1px solid var(--border-color)'
                 }}>
                   <p style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent-teal)', margin: 0 }}>₹{fee}</p>
-                  <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Expert Case Review Fee</p>
+                  <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>NeuroReview Case Fee</p>
                 </div>
 
                 <div style={{
@@ -325,21 +392,19 @@ Please review the attached case details and follow up with the patient.`;
               </div>
 
               {/* Action Buttons */}
-              <div className="flex" style={{ gap: '14px', marginTop: '12px' }}>
+              <div className="flex" style={{ gap: '14px', marginTop: '8px' }}>
                 <a
                   href="#submit-report-form"
                   onClick={(e) => {
                     e.preventDefault();
                     const el = document.getElementById('submit-report-form');
-                    if (el) {
-                      el.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="btn btn-primary"
                   style={{ padding: '12px 24px', fontSize: '0.95rem' }}
                 >
                   <Send size={18} />
-                  Submit Your Reports
+                  Submit Your Reports to NeuroReview
                 </a>
                 <a href="tel:09208430808" className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
                   <Phone size={18} />
@@ -348,8 +413,8 @@ Please review the attached case details and follow up with the patient.`;
               </div>
             </div>
 
-            {/* Right Doctor Portrait Card */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+            {/* Right Doctor Portrait & NeuroReview Brand Desk Card */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
               <div className="glass-panel" style={{
                 width: '100%',
                 maxWidth: '440px',
@@ -359,7 +424,26 @@ Please review the attached case details and follow up with the patient.`;
                 border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-secondary)'
               }}>
-                <div style={{ height: '400px', width: '100%', overflow: 'hidden', position: 'relative' }}>
+                {/* Doctor Portrait Header Ribbon */}
+                <div style={{
+                  backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                  borderBottom: '1px solid rgba(6, 182, 212, 0.25)',
+                  padding: '10px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <img
+                    src={neuroReviewLogo}
+                    alt="NeuroReview"
+                    style={{ width: '30px', height: '30px', borderRadius: '6px', objectFit: 'cover', border: '1.5px solid var(--accent-teal)' }}
+                  />
+                  <span style={{ fontSize: '0.825rem', fontWeight: 800, color: 'var(--accent-teal)', letterSpacing: '0.04em' }}>
+                    NEUROREVIEW™ LEAD NEURORADIOLOGIST
+                  </span>
+                </div>
+
+                <div style={{ height: '340px', width: '100%', overflow: 'hidden', position: 'relative' }} className="second-opinion-doctor-img-wrap">
                   <img
                     src={drDewanshImg}
                     alt="Dr. Dewansh Mishra"
@@ -372,7 +456,7 @@ Please review the attached case details and follow up with the patient.`;
                     }}
                   />
                 </div>
-                <div style={{ padding: '20px', textAlign: 'left', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ padding: '18px 20px', textAlign: 'left', borderTop: '1px solid var(--border-color)' }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0 }}>Dr. Dewansh Mishra</h3>
                   <p style={{ fontSize: '0.875rem', color: 'var(--accent-teal)', fontWeight: 700, margin: '4px 0' }}>
                     Consultant Interventional Neuroradiologist
@@ -383,6 +467,45 @@ Please review the attached case details and follow up with the patient.`;
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', margin: 0 }}>
                     Apollomedics Super Speciality Hospital, Lucknow
                   </p>
+                </div>
+              </div>
+
+              {/* Dedicated NeuroReview Brand Desk Card */}
+              <div className="glass-panel" style={{
+                width: '100%',
+                maxWidth: '440px',
+                padding: '16px 20px',
+                borderRadius: 'var(--radius-lg)',
+                backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                border: '1.5px solid rgba(6, 182, 212, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                textAlign: 'left'
+              }}>
+                <img
+                  src={neuroReviewLogo}
+                  alt="NeuroReview"
+                  style={{
+                    width: '78px',
+                    height: '78px',
+                    borderRadius: '16px',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    border: '2px solid var(--accent-teal)',
+                    boxShadow: '0 4px 18px rgba(6, 182, 212, 0.4)'
+                  }}
+                />
+                <div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    NeuroReview™ Direct Scan Desk
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--accent-teal)', fontWeight: 700, marginTop: '2px' }}>
+                    Dedicated Second Opinion Portal
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Send DICOM / CD / Drive links directly for expedited review
+                  </div>
                 </div>
               </div>
             </div>
@@ -433,15 +556,50 @@ Please review the attached case details and follow up with the patient.`;
                 </p>
               </div>
             </div>
+
+            {/* The NeuroReview Advantage Callout */}
+            <div style={{
+              marginTop: '22px',
+              padding: '18px 22px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'rgba(6, 182, 212, 0.08)',
+              border: '1.5px solid rgba(6, 182, 212, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '18px',
+              flexWrap: 'wrap'
+            }}>
+              <img
+                src={neuroReviewLogo}
+                alt="NeuroReview"
+                style={{
+                  width: '74px',
+                  height: '74px',
+                  borderRadius: '16px',
+                  objectFit: 'cover',
+                  border: '2px solid var(--accent-teal)',
+                  boxShadow: '0 4px 16px rgba(6, 182, 212, 0.35)',
+                  flexShrink: 0
+                }}
+              />
+              <div style={{ flex: '1 1 300px' }}>
+                <h4 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                  The NeuroReview™ Difference: Raw DICOM Re-Evaluation
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.55' }}>
+                  Many second opinions only read existing summary reports. Under <strong>NeuroReview™</strong>, Dr. Dewansh Mishra re-reads your actual source imaging sequences (CT, MRI, DSA angiograms) to ensure aneurysms, stenosis, or vessel shunts are accurately sized and staged.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Section 4: Get Started (Interactive 2-Step Submission & Fee Form) */}
         <div id="submit-report-form" style={{ textAlign: 'left' }}>
           <div style={{ marginBottom: '20px' }}>
-            <span className="section-tag">Get Started</span>
+            <span className="section-tag">NeuroReview Case Submission</span>
             <h2 className="section-title" style={{ fontSize: '2rem', marginTop: '6px' }}>
-              Submit your reports for expert review
+              Submit your scans to NeuroReview for expert 2nd opinion
             </h2>
           </div>
 
@@ -479,8 +637,52 @@ Please review the attached case details and follow up with the patient.`;
 
               /* ================= STEP 1: REPORT & PATIENT INPUT FORM ================= */
               <form onSubmit={handleProceedToReview} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '-10px 0 0' }}>
-                  Step 1 of 2: Fill patient details and upload medical reports
+                
+                {/* Prominent NeuroReview Portal Header */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '18px',
+                  padding: '20px',
+                  borderRadius: 'var(--radius-lg)',
+                  backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                  border: '1.5px solid rgba(6, 182, 212, 0.3)',
+                  marginBottom: '10px'
+                }}>
+                  <img
+                    src={neuroReviewLogo}
+                    alt="NeuroReview"
+                    style={{
+                      width: '92px',
+                      height: '92px',
+                      borderRadius: '20px',
+                      objectFit: 'cover',
+                      border: '2px solid var(--accent-teal)',
+                      boxShadow: '0 6px 20px rgba(6, 182, 212, 0.45)',
+                      flexShrink: 0
+                    }}
+                  />
+                  <div>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      color: 'var(--accent-teal)',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase'
+                    }}>
+                      Official NeuroReview™ Portal
+                    </span>
+                    <h3 style={{ margin: '2px 0 4px', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      NeuroReview™ Scan Submission Desk
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.45' }}>
+                      Case details and scans are routed directly to the NeuroReview™ clinical desk and reviewed personally by Dr. Dewansh Mishra.
+                    </p>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 4px' }}>
+                  Step 1 of 2: Fill patient details and upload medical reports / scans for NeuroReview evaluation
                 </p>
 
                 <div className="grid grid-cols-2" style={{ gap: '20px' }}>
@@ -704,10 +906,15 @@ Please review the attached case details and follow up with the patient.`;
 
               /* ================= STEP 2: REVIEW DETAILS & RAZORPAY FEE (₹500) ================= */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Review Case & Consultation Fee</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Step 2 of 2: Confirm details & proceed to pay fee</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '14px', overflow: 'hidden', border: '2px solid var(--accent-teal)', flexShrink: 0, boxShadow: '0 3px 12px rgba(6, 182, 212, 0.3)' }}>
+                      <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Review Case &amp; NeuroReview™ Consultation Fee</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>Step 2 of 2: Confirm details &amp; proceed to pay fee • Direct Clinical Review</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setStep(1)}
@@ -768,11 +975,11 @@ Please review the attached case details and follow up with the patient.`;
                   gap: '10px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>2nd Opinion Expert Review Fee</span>
+                    <span>NeuroReview 2nd Opinion Review Fee</span>
                     <span style={{ fontWeight: 800 }}>₹{fee}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-                    <span>Hospital Report Upload & Queue</span>
+                    <span>Hospital Scan Upload & Priority Queue</span>
                     <span style={{ color: '#10b981', fontWeight: 700 }}>FREE</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(6, 182, 212, 0.25)', paddingTop: '10px', marginTop: '4px' }}>
@@ -793,7 +1000,7 @@ Please review the attached case details and follow up with the patient.`;
                   border: '1px solid var(--border-color)'
                 }}>
                   <CreditCard size={18} color="var(--accent-teal)" style={{ flexShrink: 0 }} />
-                  <span>Secured 256-bit payment gateway. Dr. Dewansh Mishra and the clinical team will receive instant notification with your case details upon payment.</span>
+                  <span>Secured 256-bit payment gateway. Case details and uploaded scans are routed directly to NeuroReview™ and Dr. Dewansh Mishra upon payment.</span>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -810,21 +1017,19 @@ Please review the attached case details and follow up with the patient.`;
               /* ================= STEP 3: SUCCESS CONFIRMATION RECEIPT ================= */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'center', alignItems: 'center' }}>
                 <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+                  width: '88px',
+                  height: '88px',
+                  borderRadius: '22px',
+                  overflow: 'hidden',
+                  boxShadow: '0 6px 20px rgba(16, 185, 129, 0.35)',
+                  border: '2.5px solid #10b981'
                 }}>
-                  <CheckCircle2 size={40} />
+                  <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
 
                 <div>
                   <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
-                    2nd Opinion Request Submitted & Paid!
+                    NeuroReview 2nd Opinion Request Submitted & Paid!
                   </h3>
                   <p style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: 700, marginTop: '4px', margin: 0 }}>
                     Payment Successful ({confirmedSubmission?.feePaid || `₹${fee}`}) • Ref: {confirmedSubmission?.id}
@@ -843,13 +1048,14 @@ Please review the attached case details and follow up with the patient.`;
                   gap: '10px',
                   textAlign: 'left'
                 }}>
+                  <p><strong>Service Desk:</strong> <span style={{ color: 'var(--accent-teal)', fontWeight: 700 }}>NeuroReview™ Official Scan Desk</span></p>
                   <p><strong>Razorpay Payment ID:</strong> <span style={{ fontFamily: 'monospace', color: 'var(--accent-teal)', fontWeight: 700 }}>{confirmedSubmission?.paymentId}</span></p>
                   <p><strong>Patient Name:</strong> {confirmedSubmission?.fullName}</p>
                   <p><strong>Contact Phone:</strong> {confirmedSubmission?.phone}</p>
                   <p><strong>Email Address:</strong> {confirmedSubmission?.email}</p>
                   <p><strong>Condition:</strong> {confirmedSubmission?.condition || 'N/A'}</p>
                   <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
-                    <strong>Attached Files Sent to Doctor ({selectedFiles.length}):</strong>
+                    <strong>Attached Files Sent to NeuroReview ({selectedFiles.length}):</strong>
                     {selectedFiles.length > 0 ? (
                       <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--accent-teal)', fontSize: '0.825rem' }}>
                         {selectedFiles.map((f, idx) => (
@@ -863,15 +1069,16 @@ Please review the attached case details and follow up with the patient.`;
                 </div>
 
                 <div style={{
-                  padding: '12px 16px',
-                  backgroundColor: 'rgba(6, 182, 212, 0.06)',
+                  padding: '14px 18px',
+                  backgroundColor: 'rgba(6, 182, 212, 0.08)',
                   borderRadius: 'var(--radius-sm)',
                   borderLeft: '4px solid var(--accent-teal)',
-                  fontSize: '0.85rem',
-                  color: 'var(--text-secondary)',
-                  textAlign: 'left'
+                  fontSize: '0.875rem',
+                  color: 'var(--text-primary)',
+                  textAlign: 'left',
+                  lineHeight: '1.6'
                 }}>
-                  Your case summary, payment receipt, and medical details have been received. Dr. Dewansh Mishra and the clinical team will review them and reach you shortly.
+                  Your case summary, payment receipt, and medical scan reports have been submitted to <strong>NeuroReview™</strong>. Dr. Dewansh Mishra and the clinical team will review your scans and reach out to you shortly.
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', width: '100%' }}>

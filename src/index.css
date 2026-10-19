@@ -367,13 +367,13 @@ button, input, select, textarea {
 /* Header Specific Button & Dropdown Styles */
 .btn-pill {
   border-radius: 9999px;
-  padding: 10px 22px;
-  font-size: 0.875rem;
-  font-weight: 700;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 650;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -517,31 +517,31 @@ button, input, select, textarea {
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0 32px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
 }
 
 .doctor-badge-link {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
 }
 
 .doctor-avatar-box {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   border: 2px solid var(--accent-teal);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+  box-shadow: 0 3px 10px rgba(6, 182, 212, 0.25);
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -559,8 +559,8 @@ button, input, select, textarea {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background-color: #10b981;
   border: 1.5px solid #0f172a;
@@ -573,7 +573,7 @@ button, input, select, textarea {
 }
 
 .doctor-name {
-  font-size: 1.15rem;
+  font-size: 1.025rem;
   font-weight: 800;
   color: #e11d48;
   font-family: var(--font-heading);
@@ -583,30 +583,30 @@ button, input, select, textarea {
 }
 
 .doctor-qual {
-  font-size: 0.825rem;
+  font-size: 0.725rem;
   font-weight: 600;
   color: #475569;
   line-height: 1.25;
-  margin-top: 2px;
+  margin-top: 1px;
   white-space: nowrap;
 }
 
 .desktop-nav-links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 8px;
   flex: 1;
   justify-content: center;
 }
 
 .desktop-nav-link {
-  font-size: 0.925rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 0;
+  padding: 6px 12px;
   text-decoration: none;
   transition: color var(--transition-fast);
   white-space: nowrap;
@@ -619,7 +619,7 @@ button, input, select, textarea {
 .desktop-nav-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -628,8 +628,8 @@ button, input, select, textarea {
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   cursor: pointer;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -640,6 +640,26 @@ button, input, select, textarea {
 
 .theme-toggle-btn:hover {
   background-color: rgba(var(--primary-rgb), 0.12);
+}
+
+@media (max-width: 1320px) {
+  .desktop-navbar-inner {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  .desktop-nav-links {
+    gap: 5px !important;
+  }
+  .doctor-avatar-box {
+    width: 36px;
+    height: 36px;
+  }
+  .doctor-name {
+    font-size: 0.925rem;
+  }
+  .doctor-qual {
+    font-size: 0.68rem;
+  }
 }
 
 /* =====================================================
@@ -884,6 +904,246 @@ button, input, select, textarea {
   .container {
     padding-left: 14px;
     padding-right: 14px;
+  }
+}
+
+/* =====================================================
+   NEUROREVIEW TOP HERO BANNER & RESPONSIVE MOBILE VIEW
+   ===================================================== */
+.hero-banner-only {
+  height: 480px;
+}
+
+.neuroreview-hero-banner {
+  padding: 24px 30px;
+  border-radius: var(--radius-xl);
+  margin-bottom: 32px;
+  border: 2px solid rgba(6, 182, 212, 0.4);
+  background: radial-gradient(ellipse at top left, rgba(6, 182, 212, 0.16) 0%, rgba(15, 23, 42, 0.8) 75%);
+  box-shadow: 0 10px 35px rgba(6, 182, 212, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.neuroreview-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+}
+
+.neuroreview-banner-logo-box {
+  width: 135px;
+  height: 135px;
+  min-width: 135px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), 0 8px 20px rgba(0, 0, 0, 0.4);
+  border: 3px solid #06b6d4;
+  background-color: #0a0f1d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.neuroreview-banner-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.neuroreview-banner-info {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.neuroreview-banner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background-color: rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(6, 182, 212, 0.45);
+  color: var(--accent-teal);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+.neuroreview-banner-title {
+  font-size: 2.1rem;
+  font-weight: 900;
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.neuroreview-banner-sub {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.neuroreview-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 0.85rem;
+}
+
+.neuroreview-meta-pill {
+  color: var(--accent-teal);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  padding: 4px 10px;
+  border-radius: 6px;
+  word-break: break-all;
+}
+
+.neuroreview-meta-doc {
+  color: #10b981;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.neuroreview-hero-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.neuroreview-banner-cta-btn {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.45);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Mobile & Tablet responsiveness for banners */
+@media (max-width: 768px) {
+  .neuroreview-hero-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 20px !important;
+    gap: 14px !important;
+  }
+
+  .neuroreview-hero-left {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .neuroreview-banner-logo-box {
+    width: 82px !important;
+    height: 82px !important;
+    min-width: 82px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4) !important;
+  }
+
+  .neuroreview-banner-info {
+    flex: 1 !important;
+    gap: 2px !important;
+    overflow: hidden !important;
+  }
+
+  .neuroreview-banner-pill {
+    font-size: 0.65rem !important;
+    padding: 2px 7px !important;
+    letter-spacing: 0.03em !important;
+  }
+
+  .neuroreview-banner-title {
+    font-size: 1.45rem !important;
+    line-height: 1.15 !important;
+    margin: 2px 0 !important;
+  }
+
+  .neuroreview-banner-sub {
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .neuroreview-banner-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+    width: 100% !important;
+  }
+
+  .neuroreview-meta-pill {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.75rem !important;
+    padding: 5px 8px !important;
+    word-break: break-all !important;
+  }
+
+  .neuroreview-meta-doc {
+    font-size: 0.725rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .neuroreview-hero-right {
+    width: 100% !important;
+  }
+
+  .neuroreview-banner-cta-btn {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 11px 16px !important;
+    font-size: 0.9rem !important;
+    border-radius: 10px !important;
+  }
+
+  /* Homepage Banner slide height on mobile */
+  .hero-banner-only {
+    height: 230px !important;
+  }
+
+  .second-opinion-hero-panel {
+    padding: 20px 16px !important;
+  }
+
+  .second-opinion-doctor-img-wrap {
+    height: 260px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-banner-only {
+    height: 195px !important;
   }
 }
 

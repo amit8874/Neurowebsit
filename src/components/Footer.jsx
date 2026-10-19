@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrainCircuit, Phone, MapPin, Clock, ArrowUp, X } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 
 export default function Footer({ onOpenBookingModal, onOpenSecondOpinion, onOpenContactModal, onOpenAdmin }) {
   const { siteInfo } = useData();
@@ -226,6 +227,25 @@ export default function Footer({ onOpenBookingModal, onOpenSecondOpinion, onOpen
                   </p>
                   <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>
                     Video Consultation & Scan Evaluation
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex" style={{ gap: '10px' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '7px', overflow: 'hidden', flexShrink: 0, marginTop: '2px', border: '1px solid rgba(6, 182, 212, 0.4)' }}>
+                  <img src={neuroReviewLogo} alt="NeuroReview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+                <div>
+                  <p style={{ fontWeight: 600, color: '#ffffff', margin: '0 0 2px 0' }}>
+                    🧠 NeuroReview™ (2nd Opinion on Scan)
+                  </p>
+                  <p style={{ color: '#38bdf8', fontWeight: 700, margin: '0 0 2px 0' }}>
+                    <a href={`mailto:${siteInfo.neuroReviewEmail || 'neuroradiologyreview@gmail.com'}`} style={{ color: '#38bdf8', textDecoration: 'none' }}>
+                      {siteInfo.neuroReviewEmail || 'neuroradiologyreview@gmail.com'}
+                    </a>
+                  </p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>
+                    Dedicated Brain &amp; Spine Scan Review Desk
                   </p>
                 </div>
               </div>
