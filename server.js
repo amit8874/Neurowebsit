@@ -43,7 +43,8 @@ const VALID_KEYS = [
   'blogs',
   'customSections',
   'galleryImages',
-  'bookings'
+  'bookings',
+  'second_opinions'
 ];
 
 // ─── MongoDB Helpers ───────────────────────────────────────────────────────────
@@ -87,6 +88,25 @@ const cloudinaryStorage = new CloudinaryStorage({
 const upload = multer({
   storage: cloudinaryStorage,
   limits: { fileSize: 15 * 1024 * 1024 } // 15 MB max per image
+});
+
+// Cloudinary multer storage for Patient Medical Scans (PDF, Images, Reports up to 30MB)
+const scanCloudinaryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const isImage = file.mimetype && file.mimetype.startsWith('image/');
+    const cleanName = (file.originalname || 'scan').replace(/[^a-zA-Z0-9.-]/g, '_');
+    return {
+      folder: 'neruwebsite/scans',
+      resource_type: isImage ? 'image' : 'raw',
+      public_id: `${Date.now()}_${cleanName}`
+    };
+  }
+});
+
+const uploadScan = multer({
+  storage: scanCloudinaryStorage,
+  limits: { fileSize: 30 * 1024 * 1024 } // 30 MB max
 });
 
 // ─── Express Setup ─────────────────────────────────────────────────────────────
@@ -190,6 +210,26 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   }
 });
 
+// ─── POST /api/upload-scan ───────────────────────────────────────────────────
+// Patient uploads a medical scan/report (PDF, JPG, PNG, DOC) -> Cloudinary
+// Returns { success: true, url, name, size }
+app.post('/api/upload-scan', (req, res) => {
+  uploadScan.single('scan')(req, res, (err) => {
+    if (err) {
+      console.error('❌ Cloudinary scan upload error:', err.message);
+      return res.status(500).json({ success: false, error: err.message || 'File upload failed' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No scan file received' });
+    }
+    const url = req.file.path || req.file.secure_url;
+    const name = req.file.originalname || 'Medical_Scan';
+    const size = req.file.size ? (req.file.size / 1024 / 1024).toFixed(2) + ' MB' : '';
+    console.log(`📋 [${new Date().toLocaleTimeString()}] Patient Scan uploaded to Cloudinary: ${name} -> ${url}`);
+    res.json({ success: true, url, name, size });
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  DATA PERSISTENCE API (MongoDB)
 //  All admin panel changes are saved here so they reflect on ALL devices/systems
@@ -265,6 +305,82 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
+// ─── GET /api/second-opinions ──────────────────────────────────────────────────
+// Returns list of all NeuroReview 2nd opinion submissions from MongoDB
+app.get('/api/second-opinions', async (req, res) => {
+  try {
+    const list = await readData('second_opinions');
+    res.json({ success: true, secondOpinions: Array.isArray(list) ? list : [] });
+  } catch (err) {
+    console.error('❌ Failed to fetch second opinions:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── POST /api/second-opinions ─────────────────────────────────────────────────
+// Save a confirmed 2nd opinion submission with scan links to MongoDB
+app.post('/api/second-opinions', async (req, res) => {
+  try {
+    const newSubmission = req.body;
+    if (!newSubmission || !newSubmission.fullName) {
+      return res.status(400).json({ success: false, error: 'Missing submission details' });
+    }
+    const record = {
+      ...newSubmission,
+      status: newSubmission.status || 'Pending Review',
+      createdAt: newSubmission.createdAt || new Date().toISOString()
+    };
+    const existing = (await readData('second_opinions')) || [];
+    const updated = [record, ...existing];
+    await writeData('second_opinions', updated);
+    console.log(`🧠 [${new Date().toLocaleTimeString()}] Saved NeuroReview 2nd Opinion: ${record.fullName} (Ref: ${record.id}) to MongoDB`);
+    res.json({ success: true, count: updated.length, secondOpinion: record });
+  } catch (err) {
+    console.error('❌ Failed to save second opinion:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── PUT /api/second-opinions/:id ──────────────────────────────────────────────
+// Update status/doctor notes for a second opinion
+app.put('/api/second-opinions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, doctorNotes } = req.body || {};
+    const list = (await readData('second_opinions')) || [];
+    const updated = list.map(item =>
+      item.id === id
+        ? {
+            ...item,
+            status: status !== undefined ? status : item.status,
+            doctorNotes: doctorNotes !== undefined ? doctorNotes : item.doctorNotes,
+            updatedAt: new Date().toISOString()
+          }
+        : item
+    );
+    await writeData('second_opinions', updated);
+    res.json({ success: true, secondOpinions: updated });
+  } catch (err) {
+    console.error('❌ Failed to update second opinion:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── DELETE /api/second-opinions/:id ───────────────────────────────────────────
+// Delete a second opinion record
+app.delete('/api/second-opinions/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const list = (await readData('second_opinions')) || [];
+    const updated = list.filter(item => item.id !== id);
+    await writeData('second_opinions', updated);
+    res.json({ success: true, count: updated.length });
+  } catch (err) {
+    console.error('❌ Failed to delete second opinion:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ─── POST /api/admin/login ─────────────────────────────────────────────────────
 // Validate admin credentials (credentials controlled via .env)
 app.post('/api/admin/login', (req, res) => {
@@ -296,7 +412,7 @@ app.post('/api/admin/login', (req, res) => {
 
 // ─── POST /api/send-email ──────────────────────────────────────────────────────
 app.post('/api/send-email', async (req, res) => {
-  const { subjectLine, patientName, patientPhone, patientEmail, messageBody, bookingDetails, recipientEmail } = req.body || {};
+  const { subjectLine, patientName, patientPhone, patientEmail, messageBody, bookingDetails, recipientEmail, scanUrls } = req.body || {};
 
   if (!subjectLine || !patientName || !messageBody) {
     return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -319,12 +435,58 @@ app.post('/api/send-email', async (req, res) => {
     ? (process.env.RESEND_FROM_EMAIL || `${senderBrandName} <onboarding@resend.dev>`)
     : `"${senderBrandName}" <${senderUser}>`;
 
+  // Format Cloudinary Scan URLs for Doctor Email (HTML + Plain text)
+  const scansList = Array.isArray(scanUrls) ? scanUrls.filter(s => s && s.url) : [];
+  
+  let scansHtml = '';
+  if (scansList.length > 0) {
+    scansHtml = `
+      <div style="margin: 22px 0 16px; padding: 18px 20px; background: #ecfeff; border: 2px solid #0891b2; border-radius: 8px;">
+        <div style="margin-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 16px; color: #0e7490; font-weight: bold;">
+            📁 Attached Patient Medical Scans (${scansList.length} File${scansList.length > 1 ? 's' : ''})
+          </h3>
+          <p style="margin: 4px 0 0; font-size: 13px; color: #334155;">
+            Uploaded securely to Cloudinary storage. Click below to view or download:
+          </p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${scansList.map((s, idx) => `
+            <tr>
+              <td style="padding: 8px 0; border-top: ${idx > 0 ? '1px dashed #a5f3fc' : 'none'};">
+                <div style="margin-bottom: 6px;">
+                  <strong style="color: #0f172a; font-size: 14px;">📄 Scan ${idx + 1}: ${s.name || 'Medical Scan'}</strong>
+                  ${s.size ? `<span style="color: #64748b; font-size: 12px; margin-left: 6px;">(${s.size})</span>` : ''}
+                </div>
+                <div>
+                  <a href="${s.url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #0891b2; color: #ffffff !important; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; font-size: 13.5px; box-shadow: 0 2px 4px rgba(8, 145, 178, 0.25);">
+                    📥 View / Download Patient Scan
+                  </a>
+                </div>
+                <div style="margin-top: 6px; font-size: 11px; color: #64748b; word-break: break-all;">
+                  Direct Link: <a href="${s.url}" target="_blank" rel="noopener noreferrer" style="color: #0891b2; text-decoration: underline;">${s.url}</a>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    `;
+  }
+
+  let fullTextMessage = messageBody;
+  if (scansList.length > 0) {
+    fullTextMessage += '\n\nPATIENT SCANS (DIRECT CLOUD DOWNLOAD LINKS):\n==================================================\n' +
+      scansList.map((s, i) => `${i + 1}. ${s.name || 'Scan'} (${s.size || 'N/A'})\n   Download Link: ${s.url}`).join('\n\n') +
+      '\n==================================================';
+  }
+
   const mailOptions = {
     from: doctorFrom,
     to: doctorTarget,
     replyTo: validReplyTo,
     subject: subjectLine,
-    text: messageBody,
+    text: fullTextMessage,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 8px;">
         <div style="background: linear-gradient(135deg, #0891b2, #4f46e5); padding: 20px 24px; border-radius: 8px 8px 0 0;">
@@ -351,6 +513,9 @@ app.post('/api/send-email', async (req, res) => {
               <td style="padding: 10px 14px; color: #4338ca; font-weight: bold; border-bottom: 1px solid #e2e8f0;">NeuroReview (${doctorTarget})</td>
             </tr>` : ''}
           </table>
+
+          ${scansHtml}
+
           <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 6px; border-left: 4px solid #0891b2;">
             <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; color: #334155; margin: 0; line-height: 1.6;">${messageBody}</pre>
           </div>

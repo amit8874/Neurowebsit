@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import { API_BASE } from '../utils/apiConfig';
 import { 
   LayoutDashboard, 
   Image as ImageIcon, 
@@ -26,7 +27,15 @@ import {
   Upload,
   Camera,
   GraduationCap,
-  Award
+  Award,
+  FileCheck,
+  Search,
+  Filter,
+  Download,
+  RefreshCw,
+  AlertCircle,
+  CreditCard,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function AdminPanel({ onClose }) {
@@ -68,6 +77,70 @@ export default function AdminPanel({ onClose }) {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [notification, setNotification] = useState('');
+
+  // NeuroReview 2nd Opinion Submissions State (stored in MongoDB)
+  const [secondOpinions, setSecondOpinions] = useState([]);
+  const [loadingOpinions, setLoadingOpinions] = useState(false);
+  const [opinionSearch, setOpinionSearch] = useState('');
+  const [opinionStatusFilter, setOpinionStatusFilter] = useState('ALL');
+
+  const fetchSecondOpinions = async () => {
+    setLoadingOpinions(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/second-opinions`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.secondOpinions)) {
+        const localList = JSON.parse(localStorage.getItem('dewansh_second_opinions') || '[]');
+        const ids = new Set(data.secondOpinions.map((x) => x.id));
+        const combined = [...data.secondOpinions, ...localList.filter((x) => !ids.has(x.id))];
+        setSecondOpinions(combined);
+      } else {
+        const localList = JSON.parse(localStorage.getItem('dewansh_second_opinions') || '[]');
+        setSecondOpinions(localList);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch second opinions from server:', err);
+      const localList = JSON.parse(localStorage.getItem('dewansh_second_opinions') || '[]');
+      setSecondOpinions(localList);
+    } finally {
+      setLoadingOpinions(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSecondOpinions();
+  }, []);
+
+  const handleUpdateOpinionStatus = async (id, newStatus) => {
+    try {
+      await fetch(`${API_BASE}/api/second-opinions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      setSecondOpinions((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
+      );
+      setNotification(`Case #${id} marked as: ${newStatus}`);
+      setTimeout(() => setNotification(''), 3500);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteOpinion = async (id) => {
+    if (!window.confirm(`Are you sure you want to delete case #${id}?`)) return;
+    try {
+      await fetch(`${API_BASE}/api/second-opinions/${id}`, { method: 'DELETE' });
+      setSecondOpinions((prev) => prev.filter((item) => item.id !== id));
+      const localList = JSON.parse(localStorage.getItem('dewansh_second_opinions') || '[]');
+      localStorage.setItem('dewansh_second_opinions', JSON.stringify(localList.filter((item) => item.id !== id)));
+      setNotification(`Case #${id} removed.`);
+      setTimeout(() => setNotification(''), 3500);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Upload image to Cloudinary via backend, with local preview fallback
   const handleFileUpload = async (e, callback) => {
@@ -501,6 +574,7 @@ export default function AdminPanel({ onClose }) {
         }}>
           {[
             { id: 'overview', label: 'Dashboard Overview', icon: LayoutDashboard },
+            { id: 'secondOpinions', label: 'NeuroReview 2nd Opinions', icon: FileCheck, count: secondOpinions.length },
             { id: 'profile', label: 'Doctor & Hospital Info', icon: User },
             { id: 'about', label: 'About & Credentials', icon: GraduationCap },
             { id: 'banners', label: 'Hero Banners', icon: ImageIcon },
@@ -520,7 +594,7 @@ export default function AdminPanel({ onClose }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
+                  justifyContent: 'space-between',
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: 'none',
@@ -534,8 +608,23 @@ export default function AdminPanel({ onClose }) {
                   transition: 'all 0.2s'
                 }}
               >
-                <Icon size={18} />
-                {tab.label}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Icon size={18} />
+                  {tab.label}
+                </span>
+                {typeof tab.count === 'number' && tab.count > 0 && (
+                  <span style={{
+                    backgroundColor: isActive ? '#06b6d4' : '#1e293b',
+                    color: isActive ? '#0f172a' : '#38bdf8',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '2px 7px',
+                    borderRadius: '9999px',
+                    border: '1px solid rgba(6, 182, 212, 0.3)'
+                  }}>
+                    {tab.count}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -568,6 +657,7 @@ export default function AdminPanel({ onClose }) {
                 marginBottom: '32px'
               }}>
                 {[
+                  { title: 'NeuroReview 2nd Opinions', count: secondOpinions.length, icon: FileCheck, color: '#38bdf8' },
                   { title: 'Degrees & Credentials', count: aboutForm.credentials?.length || 3, icon: GraduationCap, color: '#06b6d4' },
                   { title: 'Hero Banners', count: heroSlides.length, icon: ImageIcon, color: '#38bdf8' },
                   { title: 'Treatments Listed', count: treatments.length, icon: Stethoscope, color: '#34d399' },
@@ -622,6 +712,24 @@ export default function AdminPanel({ onClose }) {
                   Quick Website Controls
                 </h3>
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setActiveTab('secondOpinions')}
+                    style={{
+                      padding: '12px 20px',
+                      backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                      color: '#38bdf8',
+                      border: '1.5px solid #06b6d4',
+                      borderRadius: '10px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <FileCheck size={16} /> View NeuroReview 2nd Opinions &amp; Scans ({secondOpinions.length})
+                  </button>
+
                   <button
                     onClick={() => setActiveTab('profile')}
                     style={{
@@ -695,6 +803,444 @@ export default function AdminPanel({ onClose }) {
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* TAB: NEUROREVIEW 2ND OPINIONS */}
+          {activeTab === 'secondOpinions' && (
+            <div>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0, color: '#f8fafc' }}>
+                      NeuroReview™ 2nd Opinion on Scan Submissions
+                    </h1>
+                    <span style={{
+                      backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                      color: '#38bdf8',
+                      padding: '3px 10px',
+                      borderRadius: '9999px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      border: '1px solid rgba(6, 182, 212, 0.3)'
+                    }}>
+                      {secondOpinions.length} Cases
+                    </span>
+                  </div>
+                  <p style={{ color: '#94a3b8', fontSize: '14px', margin: '6px 0 0' }}>
+                    All patient submissions with Brain &amp; Spine MRI, CT, and angiography scans uploaded directly to Cloudinary and saved in MongoDB.
+                  </p>
+                </div>
+
+                <button
+                  onClick={fetchSecondOpinions}
+                  disabled={loadingOpinions}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 18px',
+                    backgroundColor: '#1e293b',
+                    color: '#38bdf8',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '13.5px'
+                  }}
+                >
+                  <RefreshCw size={15} className={loadingOpinions ? 'animate-spin' : ''} />
+                  {loadingOpinions ? 'Refreshing...' : 'Refresh Records'}
+                </button>
+              </div>
+
+              {/* Metric Cards Row */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '16px',
+                marginBottom: '24px'
+              }}>
+                <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px 20px' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Total Cases</p>
+                  <h3 style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '800', color: '#f8fafc' }}>{secondOpinions.length}</h3>
+                </div>
+                <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px 20px' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Pending Review</p>
+                  <h3 style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '800', color: '#f59e0b' }}>
+                    {secondOpinions.filter(o => !o.status || o.status === 'Pending Review').length}
+                  </h3>
+                </div>
+                <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px 20px' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Reviewed / Contacted</p>
+                  <h3 style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '800', color: '#10b981' }}>
+                    {secondOpinions.filter(o => o.status === 'Reviewed' || o.status === 'Contacted' || o.status === 'Completed').length}
+                  </h3>
+                </div>
+                <div style={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px 20px' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>Review Fees Collected</p>
+                  <h3 style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '800', color: '#06b6d4' }}>
+                    ₹{secondOpinions.length * (siteInfo?.consultationFee || 500)}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Filter & Search Toolbar */}
+              <div style={{
+                backgroundColor: '#0f172a',
+                border: '1px solid #1e293b',
+                borderRadius: '12px',
+                padding: '14px 18px',
+                marginBottom: '20px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '14px',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 300px' }}>
+                  <Search size={16} color="#94a3b8" />
+                  <input
+                    type="text"
+                    placeholder="Search by patient name, phone, email, condition, or Ref ID..."
+                    value={opinionSearch}
+                    onChange={(e) => setOpinionSearch(e.target.value)}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #334155',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#f8fafc',
+                      fontSize: '13.5px'
+                    }}
+                  />
+                  {opinionSearch && (
+                    <button
+                      onClick={() => setOpinionSearch('')}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Filter size={15} color="#94a3b8" />
+                  <span style={{ fontSize: '13px', color: '#94a3b8' }}>Status:</span>
+                  <select
+                    value={opinionStatusFilter}
+                    onChange={(e) => setOpinionStatusFilter(e.target.value)}
+                    style={{
+                      backgroundColor: '#1e293b',
+                      border: '1px solid #334155',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                      color: '#f8fafc',
+                      fontSize: '13px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="ALL">All Statuses ({secondOpinions.length})</option>
+                    <option value="Pending Review">Pending Review</option>
+                    <option value="In Review">In Review</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Cases List */}
+              {secondOpinions.filter(item => {
+                const q = opinionSearch.toLowerCase().trim();
+                const matchesQuery = !q ||
+                  (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+                  (item.phone && item.phone.toLowerCase().includes(q)) ||
+                  (item.email && item.email.toLowerCase().includes(q)) ||
+                  (item.id && item.id.toLowerCase().includes(q)) ||
+                  (item.paymentId && item.paymentId.toLowerCase().includes(q)) ||
+                  (item.condition && item.condition.toLowerCase().includes(q));
+
+                const matchesStatus = opinionStatusFilter === 'ALL' ||
+                  (item.status || 'Pending Review') === opinionStatusFilter;
+
+                return matchesQuery && matchesStatus;
+              }).length === 0 ? (
+                <div style={{
+                  backgroundColor: '#0f172a',
+                  border: '1px solid #1e293b',
+                  borderRadius: '14px',
+                  padding: '48px 24px',
+                  textAlign: 'center'
+                }}>
+                  <FileCheck size={48} color="#475569" style={{ margin: '0 auto 12px' }} />
+                  <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '18px' }}>
+                    {secondOpinions.length === 0 ? 'No 2nd Opinion Submissions Yet' : 'No cases match your search/filter'}
+                  </h3>
+                  <p style={{ margin: '6px 0 0', color: '#94a3b8', fontSize: '13.5px' }}>
+                    {secondOpinions.length === 0
+                      ? 'When patients upload their MRI/CT scans on the Second Opinion page, their case details and scan download links will appear here.'
+                      : 'Try clearing your search query or changing the status filter.'}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {secondOpinions.filter(item => {
+                    const q = opinionSearch.toLowerCase().trim();
+                    const matchesQuery = !q ||
+                      (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+                      (item.phone && item.phone.toLowerCase().includes(q)) ||
+                      (item.email && item.email.toLowerCase().includes(q)) ||
+                      (item.id && item.id.toLowerCase().includes(q)) ||
+                      (item.paymentId && item.paymentId.toLowerCase().includes(q)) ||
+                      (item.condition && item.condition.toLowerCase().includes(q));
+
+                    const matchesStatus = opinionStatusFilter === 'ALL' ||
+                      (item.status || 'Pending Review') === opinionStatusFilter;
+
+                    return matchesQuery && matchesStatus;
+                  }).map((item) => {
+                    const currentStatus = item.status || 'Pending Review';
+                    const statusColors = {
+                      'Pending Review': { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', border: '#f59e0b' },
+                      'In Review': { bg: 'rgba(6, 182, 212, 0.15)', text: '#38bdf8', border: '#06b6d4' },
+                      'Contacted': { bg: 'rgba(16, 185, 129, 0.15)', text: '#10b981', border: '#10b981' },
+                      'Completed': { bg: 'rgba(147, 51, 234, 0.15)', text: '#c084fc', border: '#a855f7' }
+                    }[currentStatus] || { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', border: '#f59e0b' };
+
+                    const files = Array.isArray(item.attachedFiles) ? item.attachedFiles : [];
+
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          backgroundColor: '#0f172a',
+                          border: '1px solid #1e293b',
+                          borderRadius: '14px',
+                          padding: '22px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '14px',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        {/* Card Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{
+                              fontFamily: 'monospace',
+                              fontSize: '13px',
+                              fontWeight: '800',
+                              color: '#38bdf8',
+                              backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                              padding: '4px 10px',
+                              borderRadius: '6px'
+                            }}>
+                              {item.id}
+                            </span>
+                            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#f8fafc' }}>
+                              {item.fullName}
+                            </h3>
+                            <span style={{ color: '#64748b', fontSize: '12.5px' }}>
+                              • {item.timestamp || (item.createdAt ? new Date(item.createdAt).toLocaleString() : 'N/A')}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {/* Status Dropdown */}
+                            <select
+                              value={currentStatus}
+                              onChange={(e) => handleUpdateOpinionStatus(item.id, e.target.value)}
+                              style={{
+                                backgroundColor: statusColors.bg,
+                                color: statusColors.text,
+                                border: `1px solid ${statusColors.border}`,
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                fontSize: '12.5px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <option value="Pending Review">Pending Review</option>
+                              <option value="In Review">In Review</option>
+                              <option value="Contacted">Contacted</option>
+                              <option value="Completed">Completed</option>
+                            </select>
+
+                            <button
+                              onClick={() => handleDeleteOpinion(item.id)}
+                              title="Delete record"
+                              style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: '#64748b',
+                                cursor: 'pointer',
+                                padding: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                borderRadius: '6px'
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Patient Contact & Info Grid */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gap: '12px',
+                          fontSize: '13.5px'
+                        }}>
+                          <div style={{ backgroundColor: '#1e293b', padding: '10px 14px', borderRadius: '8px' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '11.5px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Phone</span>
+                            <a href={`tel:${item.phone}`} style={{ color: '#38bdf8', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                              <Phone size={14} /> {item.phone}
+                            </a>
+                          </div>
+
+                          <div style={{ backgroundColor: '#1e293b', padding: '10px 14px', borderRadius: '8px' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '11.5px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Email</span>
+                            <a href={`mailto:${item.email}`} style={{ color: '#f8fafc', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                              <Mail size={14} color="#38bdf8" /> {item.email || 'N/A'}
+                            </a>
+                          </div>
+
+                          <div style={{ backgroundColor: '#1e293b', padding: '10px 14px', borderRadius: '8px' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '11.5px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payment Confirmation</span>
+                            <span style={{ color: '#10b981', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                              <CheckCircle2 size={14} /> {item.feePaid || '₹500'} Paid
+                            </span>
+                            <div style={{ fontSize: '11px', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
+                              {item.paymentId}
+                            </div>
+                          </div>
+
+                          <div style={{ backgroundColor: '#1e293b', padding: '10px 14px', borderRadius: '8px' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '11.5px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Condition / Scan Type</span>
+                            <span style={{ color: '#f8fafc', fontWeight: '600', display: 'block', marginTop: '3px' }}>
+                              {item.condition || 'General Neuro-Vascular Review'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Case Summary */}
+                        {item.summary && (
+                          <div style={{ backgroundColor: '#1e293b', padding: '12px 16px', borderRadius: '8px', borderLeft: '3px solid #06b6d4' }}>
+                            <span style={{ color: '#94a3b8', fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                              Patient Case Summary
+                            </span>
+                            <p style={{ margin: 0, color: '#f8fafc', fontSize: '13.5px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                              {item.summary}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Patient Uploaded Scans on Cloudinary */}
+                        <div style={{
+                          backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                          border: '1.5px solid rgba(6, 182, 212, 0.25)',
+                          borderRadius: '10px',
+                          padding: '14px 18px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: '800', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                              📁 Attached Patient Scans ({files.length})
+                            </span>
+                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                              Stored securely on Cloudinary
+                            </span>
+                          </div>
+
+                          {files.length === 0 ? (
+                            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>No scans were attached to this submission.</p>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {files.map((file, fIdx) => (
+                                <div
+                                  key={fIdx}
+                                  style={{
+                                    backgroundColor: '#0f172a',
+                                    border: '1px solid #1e293b',
+                                    borderRadius: '8px',
+                                    padding: '10px 14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    flexWrap: 'wrap',
+                                    gap: '10px'
+                                  }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                                    <FileText size={18} color="#06b6d4" style={{ flexShrink: 0 }} />
+                                    <div>
+                                      <span style={{ fontWeight: '600', color: '#f8fafc', fontSize: '13.5px' }}>
+                                        {file.name || `Scan_${fIdx + 1}`}
+                                      </span>
+                                      {file.size && (
+                                        <span style={{ color: '#64748b', fontSize: '12px', marginLeft: '8px' }}>
+                                          ({file.size})
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {file.url ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                          padding: '8px 16px',
+                                          backgroundColor: '#0284c7',
+                                          color: '#ffffff',
+                                          borderRadius: '6px',
+                                          textDecoration: 'none',
+                                          fontSize: '13px',
+                                          fontWeight: '700',
+                                          boxShadow: '0 2px 6px rgba(2, 132, 199, 0.3)'
+                                        }}
+                                      >
+                                        <Download size={14} /> View / Download Scan
+                                      </a>
+                                      <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title="Open in new tab"
+                                        style={{
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          padding: '8px',
+                                          backgroundColor: '#1e293b',
+                                          color: '#94a3b8',
+                                          borderRadius: '6px',
+                                          textDecoration: 'none'
+                                        }}
+                                      >
+                                        <ExternalLink size={14} />
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <span style={{ color: '#ef4444', fontSize: '12px' }}>Link unavailable</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

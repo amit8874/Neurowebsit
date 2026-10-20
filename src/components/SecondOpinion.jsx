@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, User } from 'lucide-react';
+import { ShieldCheck, FileText, Upload, Phone, Check, ArrowLeft, Send, Sparkles, Building2, Award, Clock, CreditCard, CheckCircle2, User, Loader2, ExternalLink, Trash2 } from 'lucide-react';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
 import neuroReviewLogo from '../assets/neuroreview-logo.jpg';
 import { useData } from '../context/DataContext';
 import { sendDoctorEmail } from '../utils/emailService';
+import { API_BASE } from '../utils/apiConfig';
 
 // Dynamic Razorpay SDK Loader
 const loadRazorpayScript = () => {
@@ -41,11 +42,71 @@ export default function SecondOpinion({ onBack }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Upload individual scan file to Cloudinary via backend API
+  const uploadScanToCloud = async (tempId, file) => {
+    try {
+      const fd = new FormData();
+      fd.append('scan', file);
+      const res = await fetch(`${API_BASE}/api/upload-scan`, {
+        method: 'POST',
+        body: fd
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setSelectedFiles((prev) =>
+          prev.map((item) =>
+            item.id === tempId
+              ? { ...item, url: data.url, status: 'success' }
+              : item
+          )
+        );
+      } else {
+        setSelectedFiles((prev) =>
+          prev.map((item) =>
+            item.id === tempId
+              ? { ...item, status: 'error', errorMsg: data.error || 'Upload failed' }
+              : item
+          )
+        );
+      }
+    } catch (err) {
+      setSelectedFiles((prev) =>
+        prev.map((item) =>
+          item.id === tempId
+            ? { ...item, status: 'error', errorMsg: err.message || 'Upload failed' }
+            : item
+        )
+      );
+    }
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...filesArray]);
+      const newEntries = filesArray.map((file) => ({
+        id: Math.random().toString(36).substring(2, 9),
+        file,
+        name: file.name,
+        sizeStr: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        url: null,
+        status: 'uploading',
+        errorMsg: ''
+      }));
+
+      setSelectedFiles((prev) => [...prev, ...newEntries]);
+
+      // Upload each file to Cloudinary
+      newEntries.forEach((entry) => {
+        uploadScanToCloud(entry.id, entry.file);
+      });
+
+      // Clear input so selecting the same file again triggers change
+      e.target.value = '';
     }
+  };
+
+  const handleRemoveFile = (idToRemove) => {
+    setSelectedFiles((prev) => prev.filter((item) => item.id !== idToRemove));
   };
 
   // Step 1 -> Step 2 Fee Review Validation
@@ -55,14 +116,31 @@ export default function SecondOpinion({ onBack }) {
       alert('Please fill out all required fields (Full Name, Phone Number, Case Summary).');
       return;
     }
+
+    const stillUploading = selectedFiles.some((f) => f.status === 'uploading');
+    if (stillUploading) {
+      alert('Your scan files are currently uploading to the secure cloud. Please wait a moment until upload finishes.');
+      return;
+    }
+
+    const hasError = selectedFiles.some((f) => f.status === 'error');
+    if (hasError) {
+      alert('One or more scan files failed to upload. Please remove or re-upload the failed file(s) before proceeding.');
+      return;
+    }
+
     setStep(2);
   };
 
-  // Dispatch Email Notification to Doctor via EmailJS (direct to Gmail)
+  // Dispatch Email Notification to Doctor via Nodemailer/Resend (direct to Gmail)
   const notifyDoctorViaEmail = async (submissionRecord) => {
-    const attachedFilesSummary = selectedFiles.length > 0
-      ? selectedFiles.map((f, i) => `${i + 1}. ${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')
-      : 'No files attached';
+    const uploadedScans = (submissionRecord.attachedFiles || []).filter((f) => f.url);
+
+    const attachedFilesSummary = uploadedScans.length > 0
+      ? uploadedScans.map((f, i) => `${i + 1}. ${f.name} (${f.size})\n   Download Link: ${f.url}`).join('\n\n')
+      : (selectedFiles.length > 0
+          ? selectedFiles.map((f, i) => `${i + 1}. ${f.name} (${f.sizeStr || 'N/A'})`).join('\n')
+          : 'No files attached');
 
     const subjectLine = `🚨 NEUROREVIEW 2ND OPINION ON SCAN: ${submissionRecord.fullName} - ₹${fee} Paid`;
     const messageBody =
@@ -79,9 +157,12 @@ Case Summary   : ${submissionRecord.summary}
 Payment ID     : ${submissionRecord.paymentId}
 Amount Paid    : ₹${fee}
 Files Attached : ${selectedFiles.length}
+
+PATIENT SCANS (DIRECT CLOUD DOWNLOAD LINKS):
+==================================================
 ${attachedFilesSummary}
 ==================================================
-Please review the attached case details and follow up with the patient.`;
+Please click the download link(s) above to view high-resolution scan reports and follow up with the patient.`;
 
     await sendDoctorEmail({
       subjectLine,
@@ -89,7 +170,8 @@ Please review the attached case details and follow up with the patient.`;
       patientPhone: submissionRecord.phone,
       patientEmail: submissionRecord.email || 'N/A',
       messageBody,
-      recipientEmail: neuroReviewEmail
+      recipientEmail: neuroReviewEmail,
+      scanUrls: uploadedScans
     });
   };
 
@@ -171,7 +253,11 @@ Please review the attached case details and follow up with the patient.`;
       ...formData,
       paymentId: paymentId,
       feePaid: `₹${fee}`,
-      attachedFiles: selectedFiles.map(f => ({ name: f.name, size: (f.size / 1024 / 1024).toFixed(2) + ' MB' })),
+      attachedFiles: selectedFiles.map(f => ({
+        name: f.name,
+        size: f.sizeStr || (f.file ? (f.file.size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'),
+        url: f.url
+      })),
       timestamp: new Date().toLocaleString()
     };
 
@@ -181,6 +267,17 @@ Please review the attached case details and follow up with the patient.`;
       localStorage.setItem('dewansh_second_opinions', JSON.stringify([submissionRecord, ...saved]));
     } catch (err) {
       console.error(err);
+    }
+
+    // Persist permanently in MongoDB database
+    try {
+      fetch(`${API_BASE}/api/second-opinions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionRecord)
+      }).catch((e) => console.warn('MongoDB second-opinion save warning:', e.message));
+    } catch (err) {
+      console.error('Failed to post second opinion to backend:', err);
     }
 
     // Send Doctor Email Notification with File Details
@@ -848,22 +945,84 @@ Please review the attached case details and follow up with the patient.`;
                   {/* Uploaded File List Preview */}
                   {selectedFiles.length > 0 && (
                     <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {selectedFiles.map((file, idx) => (
-                        <div key={idx} style={{
+                      {selectedFiles.map((item) => (
+                        <div key={item.id} style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '10px',
-                          padding: '8px 14px',
+                          padding: '10px 14px',
                           backgroundColor: 'var(--bg-primary)',
                           borderRadius: 'var(--radius-sm)',
-                          border: '1px solid var(--border-color)',
+                          border: item.status === 'error' ? '1px solid #ef4444' : '1px solid var(--border-color)',
                           fontSize: '0.85rem'
                         }}>
-                          <FileText size={16} color="var(--accent-teal)" />
-                          <span style={{ fontWeight: 600, flex: 1 }}>{file.name}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </span>
+                          <FileText size={18} color="var(--accent-teal)" style={{ flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                            <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {item.name}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', flexWrap: 'wrap' }}>
+                              <span>{item.sizeStr}</span>
+                              {item.status === 'uploading' && (
+                                <span style={{ color: 'var(--accent-teal)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                  <Loader2 size={12} className="animate-spin" /> Uploading to cloud...
+                                </span>
+                              )}
+                              {item.status === 'success' && (
+                                <span style={{ color: '#10b981', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                                  <Check size={12} /> Uploaded to Cloud
+                                </span>
+                              )}
+                              {item.status === 'error' && (
+                                <span style={{ color: '#ef4444' }}>
+                                  ⚠️ {item.errorMsg || 'Upload failed'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: 'var(--accent-teal)',
+                                fontSize: '0.78rem',
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(6, 182, 212, 0.3)',
+                                backgroundColor: 'rgba(6, 182, 212, 0.05)',
+                                flexShrink: 0
+                              }}
+                            >
+                              <ExternalLink size={12} /> Preview
+                            </a>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(item.id)}
+                            title="Remove file"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#94a3b8',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              flexShrink: 0
+                            }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -955,7 +1114,19 @@ Please review the attached case details and follow up with the patient.`;
                     {selectedFiles.length > 0 ? (
                       <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--accent-teal)', fontSize: '0.825rem' }}>
                         {selectedFiles.map((f, idx) => (
-                          <li key={idx}>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</li>
+                          <li key={idx} style={{ marginBottom: '4px' }}>
+                            <span>{f.name} ({f.sizeStr || (f.file ? (f.file.size / 1024 / 1024).toFixed(2) + ' MB' : '')})</span>
+                            {f.url && (
+                              <a
+                                href={f.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--accent-teal)', marginLeft: '8px', textDecoration: 'underline', fontWeight: 600 }}
+                              >
+                                [Preview Scan]
+                              </a>
+                            )}
+                          </li>
                         ))}
                       </ul>
                     ) : (
@@ -1055,11 +1226,23 @@ Please review the attached case details and follow up with the patient.`;
                   <p><strong>Email Address:</strong> {confirmedSubmission?.email}</p>
                   <p><strong>Condition:</strong> {confirmedSubmission?.condition || 'N/A'}</p>
                   <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
-                    <strong>Attached Files Sent to NeuroReview ({selectedFiles.length}):</strong>
-                    {selectedFiles.length > 0 ? (
+                    <strong>Attached Files Sent to NeuroReview ({(confirmedSubmission?.attachedFiles || selectedFiles).length}):</strong>
+                    {(confirmedSubmission?.attachedFiles || selectedFiles).length > 0 ? (
                       <ul style={{ margin: '4px 0 0 16px', padding: 0, color: 'var(--accent-teal)', fontSize: '0.825rem' }}>
-                        {selectedFiles.map((f, idx) => (
-                          <li key={idx}>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</li>
+                        {(confirmedSubmission?.attachedFiles || selectedFiles).map((f, idx) => (
+                          <li key={idx} style={{ marginBottom: '4px' }}>
+                            <span>{f.name} ({f.size || f.sizeStr})</span>
+                            {f.url && (
+                              <a
+                                href={f.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--accent-teal)', marginLeft: '8px', textDecoration: 'underline', fontWeight: 600 }}
+                              >
+                                [View / Download Scan]
+                              </a>
+                            )}
+                          </li>
                         ))}
                       </ul>
                     ) : (
