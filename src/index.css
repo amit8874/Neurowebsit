@@ -1129,7 +1129,12 @@ button, input, select, textarea {
 
   /* Homepage Banner slide height on mobile */
   .hero-banner-only {
-    height: 230px !important;
+    height: auto !important;
+    aspect-ratio: 2.5 / 1 !important;
+    min-height: unset !important;
+  }
+  .hero-banner-only img {
+    object-fit: contain !important;
   }
 
   .second-opinion-hero-panel {
@@ -1143,7 +1148,12 @@ button, input, select, textarea {
 
 @media (max-width: 480px) {
   .hero-banner-only {
-    height: 195px !important;
+    height: auto !important;
+    aspect-ratio: 2.5 / 1 !important;
+    min-height: unset !important;
+  }
+  .hero-banner-only img {
+    object-fit: contain !important;
   }
 }
 

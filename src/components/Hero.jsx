@@ -492,7 +492,12 @@ export default function Hero({ onOpenSecondOpinion, onOpenBookingModal }) {
             min-height: auto !important;
           }
           .hero-banner-only {
-            height: 220px !important;
+            height: auto !important;
+            aspect-ratio: 2.5 / 1 !important;
+            min-height: unset !important;
+          }
+          .hero-banner-only img {
+            object-fit: contain !important;
           }
           #hero .hero-slide-stage {
             display: flex !important;
