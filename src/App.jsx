@@ -18,6 +18,7 @@ import CustomSections from './components/CustomSections';
 import AdminLogin from './components/AdminLogin';
 import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
+import { trackPageView, trackEvent } from './utils/analytics';
 import './App.css';
 
 function MainApp() {
@@ -69,6 +70,35 @@ function MainApp() {
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // Track virtual page views across all pages/views in Google Analytics
+  useEffect(() => {
+    const titles = {
+      home: 'Dr. Dewansh Mishra | Best Neuro-interventional Radiologist in Lucknow | Apollomedics',
+      'second-opinion': 'Second Opinion & Scan Review | Dr. Dewansh Mishra',
+      gallery: 'Gallery & Cases | Dr. Dewansh Mishra',
+      'patient-stories': 'Patient Stories & Recovery | Dr. Dewansh Mishra',
+      blog: 'Articles & Medical Insights | Dr. Dewansh Mishra',
+      admin: 'Admin Portal | Dr. Dewansh Mishra',
+    };
+
+    const title = titles[view] || document.title;
+    document.title = title;
+    trackPageView(window.location.pathname + (window.location.hash || ''), title);
+  }, [view]);
+
+  // Track modal opening interactions in GA4
+  useEffect(() => {
+    if (isBookingModalOpen) {
+      trackEvent('open_booking_modal', { page_path: window.location.pathname + '#booking' });
+    }
+  }, [isBookingModalOpen]);
+
+  useEffect(() => {
+    if (isContactModalOpen) {
+      trackEvent('open_contact_modal', { page_path: window.location.pathname + '#contact' });
+    }
+  }, [isContactModalOpen]);
 
   const handleOpenSecondOpinion = () => {
     window.location.hash = '#second-opinion';
