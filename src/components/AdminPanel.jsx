@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { API_BASE } from '../utils/apiConfig';
 import { 
+  parseBlogContent, 
+  contentBlocksToMarkdown, 
+  renderFormattedText, 
+  getCleanSummary 
+} from '../utils/blogFormatter';
+import { 
   LayoutDashboard, 
   Image as ImageIcon, 
   User, 
@@ -198,7 +204,16 @@ export default function AdminPanel({ onClose }) {
   // Blog form
   const [isAddingBlog, setIsAddingBlog] = useState(false);
   const [editingBlog, setEditingBlog] = useState(null);
-  const [blogForm, setBlogForm] = useState({ title: '', category: '', summary: '', readTime: '5 min read', author: siteInfo.doctorName, date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
+  const [blogPreviewMode, setBlogPreviewMode] = useState(false);
+  const [blogForm, setBlogForm] = useState({
+    title: '',
+    category: '',
+    summary: '',
+    content: '',
+    readTime: '5 min read',
+    author: siteInfo.doctorName || 'Dr. Dewansh Mishra',
+    date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  });
 
   // Custom Section form
   const [isAddingCustomSec, setIsAddingCustomSec] = useState(false);
@@ -407,16 +422,40 @@ export default function AdminPanel({ onClose }) {
 
   const handleSaveBlog = (e) => {
     e.preventDefault();
+    const finalContent = (blogForm.content && blogForm.content.trim())
+      ? blogForm.content
+      : (blogForm.summary || '');
+
+    const parsedBlocks = parseBlogContent(finalContent, blogForm.summary);
+    const finalSummary = (blogForm.summary && blogForm.summary.trim())
+      ? blogForm.summary
+      : getCleanSummary({ summary: blogForm.summary }, parsedBlocks);
+
+    const payload = {
+      ...blogForm,
+      summary: finalSummary,
+      content: parsedBlocks
+    };
+
     if (editingBlog) {
-      updateBlog(editingBlog.id, blogForm);
+      updateBlog(editingBlog.id, payload);
       notify('Blog article updated!');
     } else {
-      addBlog(blogForm);
+      addBlog(payload);
       notify('New blog article published!');
     }
     setIsAddingBlog(false);
     setEditingBlog(null);
-    setBlogForm({ title: '', category: '', summary: '', readTime: '5 min read', author: siteInfo.doctorName, date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
+    setBlogPreviewMode(false);
+    setBlogForm({
+      title: '',
+      category: '',
+      summary: '',
+      content: '',
+      readTime: '5 min read',
+      author: siteInfo.doctorName || 'Dr. Dewansh Mishra',
+      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    });
   };
 
   const handleSaveCustomSec = (e) => {
@@ -3122,7 +3161,16 @@ export default function AdminPanel({ onClose }) {
                   onClick={() => {
                     setIsAddingBlog(true);
                     setEditingBlog(null);
-                    setBlogForm({ title: '', category: '', summary: '', readTime: '5 min read', author: siteInfo.doctorName, date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
+                    setBlogPreviewMode(false);
+                    setBlogForm({
+                      title: '',
+                      category: '',
+                      summary: '',
+                      content: '',
+                      readTime: '5 min read',
+                      author: siteInfo.doctorName || 'Dr. Dewansh Mishra',
+                      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    });
                   }}
                   style={{
                     padding: '10px 20px',
@@ -3154,17 +3202,51 @@ export default function AdminPanel({ onClose }) {
                   gap: '16px'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#38bdf8', margin: 0 }}>
-                      {editingBlog ? 'Edit Blog Article' : 'Publish New Blog Article'}
-                    </h3>
-                    <button type="button" onClick={() => { setIsAddingBlog(false); setEditingBlog(null); setBlogForm({ title: '', category: '', summary: '', readTime: '5 min read', author: siteInfo.doctorName, date: '' }); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><X size={18} /></button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#38bdf8', margin: 0 }}>
+                        {editingBlog ? 'Edit Blog Article' : 'Publish New Blog Article'}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setBlogPreviewMode(!blogPreviewMode)}
+                        style={{
+                          backgroundColor: blogPreviewMode ? '#06b6d4' : '#1e293b',
+                          color: blogPreviewMode ? '#070b14' : '#38bdf8',
+                          border: '1px solid #334155',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <Eye size={13} />
+                        {blogPreviewMode ? 'Back to Editor' : 'Live Preview'}
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingBlog(false);
+                        setEditingBlog(null);
+                        setBlogPreviewMode(false);
+                        setBlogForm({ title: '', category: '', summary: '', content: '', readTime: '5 min read', author: siteInfo.doctorName || 'Dr. Dewansh Mishra', date: '' });
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                    >
+                      <X size={18} />
+                    </button>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Article Title</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Article Title *</label>
                       <input
                         type="text"
+                        placeholder="e.g. Brain Stroke in Young Patients: Causes & Early Treatment"
                         value={blogForm.title}
                         onChange={(e) => setBlogForm({ ...blogForm, title: e.target.value })}
                         style={{ width: '100%', padding: '10px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
@@ -3172,33 +3254,193 @@ export default function AdminPanel({ onClose }) {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Category</label>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Category *</label>
                       <input
                         type="text"
-                        placeholder="e.g. Brain Aneurysm"
+                        placeholder="e.g. Brain Stroke"
                         value={blogForm.category}
                         onChange={(e) => setBlogForm({ ...blogForm, category: e.target.value })}
                         style={{ width: '100%', padding: '10px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
                         required
                       />
                     </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Read Time</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 5 min read"
+                        value={blogForm.readTime || '5 min read'}
+                        onChange={(e) => setBlogForm({ ...blogForm, readTime: e.target.value })}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Article Summary / Abstract</label>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>
+                      Article Short Summary (Shown on preview card — optional, auto-extracted if empty)
+                    </label>
                     <textarea
-                      rows={3}
+                      rows={2}
+                      placeholder="Brief 1-2 sentence overview for the card..."
                       value={blogForm.summary}
                       onChange={(e) => setBlogForm({ ...blogForm, summary: e.target.value })}
                       style={{ width: '100%', padding: '10px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
-                      required
                     />
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
+                      <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>
+                        Full Article Content (Supports formatting) *
+                      </label>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const snippet = '\n\n### New Subheading Title\n';
+                            setBlogForm(prev => ({ ...prev, content: (prev.content || '') + snippet }));
+                          }}
+                          style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          + Heading (###)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const snippet = '\n- Symptom 1: Sudden numbness or weakness\n- Symptom 2: Slurred speech\n- Symptom 3: Vision loss\n';
+                            setBlogForm(prev => ({ ...prev, content: (prev.content || '') + snippet }));
+                          }}
+                          style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          + Checkmark List (-)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const snippet = '\n> Clinical Window: Mechanical thrombectomy is proven effective within 6 to 24 hours.\n';
+                            setBlogForm(prev => ({ ...prev, content: (prev.content || '') + snippet }));
+                          }}
+                          style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          + Highlight Box (&gt;)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const snippet = ' **LACK OF AWARENESS** ';
+                            setBlogForm(prev => ({ ...prev, content: (prev.content || '') + snippet }));
+                          }}
+                          style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          + Bold (**)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Insert sample medical article template? This will append to your editor.')) {
+                              const sampleTemplate = `An acute ischemic stroke occurs when a blood clot blocks a major blood vessel supplying blood to the brain. Rapid recognition and immediate treatment are paramount to preventing irreversible disability.\n\n### Recognizing Stroke Symptoms: The BE-FAST Protocol\nEarly identification saves lives. Remember the BE-FAST acronym:\n\n- B - Balance: Sudden loss of balance or dizziness\n- E - Eyes: Sudden double vision or loss of vision in one eye\n- F - Face: Facial drooping or uneven smile\n- A - Arms: Sudden weakness or numbness in one arm or leg\n- S - Speech: Slurred speech or difficulty finding words\n- T - Time: Time to call emergency services immediately\n\n### Advanced Neurovascular Treatment\nWhile intravenous medications are given for small clots, large vessel blockages require pinhole Mechanical Thrombectomy performed in the cath lab.\n\n> Clinical Window: Mechanical thrombectomy is proven effective within 6 hours of symptom onset, and up to 24 hours in select patients.`;
+                              setBlogForm(prev => ({ ...prev, content: (prev.content ? prev.content + '\n\n' : '') + sampleTemplate }));
+                            }
+                          }}
+                          style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', border: '1px solid rgba(6, 182, 212, 0.3)', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
+                        >
+                          + Sample Template
+                        </button>
+                      </div>
+                    </div>
+
+                    {blogPreviewMode ? (
+                      <div style={{
+                        backgroundColor: '#070b14',
+                        border: '1px solid #06b6d4',
+                        borderRadius: '8px',
+                        padding: '24px',
+                        minHeight: '280px',
+                        maxHeight: '450px',
+                        overflowY: 'auto'
+                      }}>
+                        <div style={{ marginBottom: '14px', borderBottom: '1px solid #1e293b', paddingBottom: '12px' }}>
+                          <span style={{ fontSize: '11px', color: '#06b6d4', fontWeight: 700, textTransform: 'uppercase' }}>
+                            {blogForm.category || 'Category'}
+                          </span>
+                          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#f8fafc', margin: '4px 0 6px' }}>
+                            {blogForm.title || 'Article Title'}
+                          </h2>
+                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                            {blogForm.author || siteInfo.doctorName} • {blogForm.readTime || '5 min read'}
+                          </span>
+                        </div>
+
+                        <div>
+                          {parseBlogContent(blogForm.content || blogForm.summary).map((block, idx) => {
+                            if (block.type === 'paragraph') {
+                              return (
+                                <p key={idx} style={{ marginBottom: '16px', color: '#cbd5e1', lineHeight: '1.7', fontSize: '14px', whiteSpace: 'pre-line' }}>
+                                  {renderFormattedText(block.text)}
+                                </p>
+                              );
+                            }
+                            if (block.type === 'heading') {
+                              return (
+                                <h3 key={idx} style={{ fontSize: '1.2rem', fontWeight: 600, color: '#f8fafc', marginTop: '22px', marginBottom: '10px' }}>
+                                  {renderFormattedText(block.text)}
+                                </h3>
+                              );
+                            }
+                            if (block.type === 'highlight') {
+                              return (
+                                <div key={idx} style={{
+                                  margin: '18px 0',
+                                  padding: '12px 16px',
+                                  backgroundColor: 'rgba(6, 182, 212, 0.08)',
+                                  borderLeft: '4px solid #06b6d4',
+                                  borderRadius: '0 6px 6px 0',
+                                  color: '#f8fafc',
+                                  fontSize: '13.5px',
+                                  lineHeight: '1.6'
+                                }}>
+                                  {renderFormattedText(block.text)}
+                                </div>
+                              );
+                            }
+                            if (block.type === 'list') {
+                              return (
+                                <ul key={idx} style={{ margin: '14px 0 18px 12px', paddingLeft: 0, listStyle: 'none' }}>
+                                  {block.items.map((item, itemIdx) => (
+                                    <li key={itemIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px', color: '#cbd5e1', fontSize: '14px' }}>
+                                      <CheckCircle2 size={16} color="#06b6d4" style={{ marginTop: '3px', flexShrink: 0 }} />
+                                      <span>{renderFormattedText(item)}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <textarea
+                        rows={12}
+                        placeholder="Write or paste your article here. Supports paragraphs, # Headings, - Bullet points with checkmarks, and > Highlight callout boxes..."
+                        value={blogForm.content || ''}
+                        onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
+                        style={{ width: '100%', padding: '12px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '13.5px', lineHeight: '1.6', fontFamily: 'inherit' }}
+                        required={!blogForm.summary}
+                      />
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
                     <button
                       type="button"
-                      onClick={() => { setIsAddingBlog(false); setEditingBlog(null); setBlogForm({ title: '', category: '', summary: '', readTime: '5 min read', author: siteInfo.doctorName, date: '' }); }}
+                      onClick={() => {
+                        setIsAddingBlog(false);
+                        setEditingBlog(null);
+                        setBlogPreviewMode(false);
+                        setBlogForm({ title: '', category: '', summary: '', content: '', readTime: '5 min read', author: siteInfo.doctorName, date: '' });
+                      }}
                       style={{ padding: '10px 18px', backgroundColor: '#1e293b', color: '#94a3b8', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
                     >
                       Cancel
@@ -3207,7 +3449,7 @@ export default function AdminPanel({ onClose }) {
                       type="submit"
                       style={{ padding: '10px 20px', backgroundColor: '#06b6d4', color: '#070b14', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}
                     >
-                      Publish Article
+                      {editingBlog ? 'Update Article' : 'Publish Article'}
                     </button>
                   </div>
                 </form>
@@ -3223,27 +3465,46 @@ export default function AdminPanel({ onClose }) {
                     padding: '20px',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    gap: '16px'
                   }}>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                         <span style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '600' }}>
                           {b.category}
                         </span>
-                        <span style={{ fontSize: '12px', color: '#64748b' }}>{b.date} • {b.readTime}</span>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>{b.date} • {b.readTime || '5 min read'}</span>
                       </div>
                       <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', color: '#f8fafc' }}>{b.title}</h3>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>{b.summary}</p>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' }}>
+                        {getCleanSummary(b)}
+                      </p>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                       <button
-                        onClick={() => { setIsAddingBlog(false); setEditingBlog(b); setBlogForm({ ...b }); }}
+                        title="Edit Article"
+                        onClick={() => {
+                          setIsAddingBlog(false);
+                          setEditingBlog(b);
+                          setBlogPreviewMode(false);
+                          const contentText = contentBlocksToMarkdown(b.content) || (typeof b.content === 'string' ? b.content : b.summary || '');
+                          setBlogForm({
+                            title: b.title || '',
+                            category: b.category || '',
+                            readTime: b.readTime || '5 min read',
+                            author: b.author || siteInfo.doctorName || 'Dr. Dewansh Mishra',
+                            date: b.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                            summary: b.summary || '',
+                            content: contentText
+                          });
+                        }}
                         style={{ backgroundColor: '#1e293b', color: '#38bdf8', border: '1px solid #334155', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}
                       >
                         <Edit3 size={16} />
                       </button>
                       <button
+                        title="Delete Article"
                         onClick={() => deleteBlog(b.id)}
                         style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}
                       >

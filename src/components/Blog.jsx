@@ -2,19 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, ArrowLeft, User, Sparkles, BookOpen, ChevronRight, Stethoscope, Share2, CheckCircle2 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import drDewanshImg from '../assets/dr.dewan.jpeg';
+import { parseBlogContent, renderFormattedText, getCleanSummary } from '../utils/blogFormatter';
 
 export default function Blog({ onBack, onOpenBookingModal }) {
   const [selectedBlogId, setSelectedBlogId] = useState(null);
   const { blogs: contextBlogs } = useData();
 
-  const blogsData = contextBlogs.map(b => ({
-    ...b,
-    authorRole: b.authorRole || 'DM, Neurointervention (SCTIMST)',
-    content: Array.isArray(b.content) ? b.content : [
-      { type: 'paragraph', text: b.summary || '' },
-      ...(typeof b.content === 'string' ? [{ type: 'paragraph', text: b.content }] : [])
-    ]
-  }));
+  const blogsData = contextBlogs.map(b => {
+    const parsedContent = parseBlogContent(b.content, b.summary);
+    return {
+      ...b,
+      authorRole: b.authorRole || 'DM, Neurointervention (SCTIMST)',
+      summary: getCleanSummary(b, parsedContent),
+      content: parsedContent
+    };
+  });
 
   // Check URL hash for blog deep-linking
   useEffect(() => {
@@ -173,8 +175,8 @@ export default function Blog({ onBack, onOpenBookingModal }) {
               {activeBlog.content.map((block, idx) => {
                 if (block.type === 'paragraph') {
                   return (
-                    <p key={idx} style={{ marginBottom: '20px', color: 'var(--text-secondary)', fontWeight: 400 }}>
-                      {block.text}
+                    <p key={idx} style={{ marginBottom: '20px', color: 'var(--text-secondary)', fontWeight: 400, whiteSpace: 'pre-line' }}>
+                      {renderFormattedText(block.text)}
                     </p>
                   );
                 }
@@ -187,7 +189,7 @@ export default function Blog({ onBack, onOpenBookingModal }) {
                       marginTop: '32px',
                       marginBottom: '14px'
                     }}>
-                      {block.text}
+                      {renderFormattedText(block.text)}
                     </h3>
                   );
                 }
@@ -203,7 +205,7 @@ export default function Blog({ onBack, onOpenBookingModal }) {
                       color: 'var(--text-primary)',
                       lineHeight: '1.6'
                     }}>
-                      {block.text}
+                      {renderFormattedText(block.text)}
                     </div>
                   );
                 }
@@ -220,7 +222,7 @@ export default function Blog({ onBack, onOpenBookingModal }) {
                           color: 'var(--text-secondary)'
                         }}>
                           <CheckCircle2 size={18} color="var(--accent-teal)" style={{ marginTop: '3px', flexShrink: 0 }} />
-                          <span>{item}</span>
+                          <span>{renderFormattedText(item)}</span>
                         </li>
                       ))}
                     </ul>
